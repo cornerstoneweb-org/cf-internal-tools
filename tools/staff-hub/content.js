@@ -25,8 +25,69 @@
 // below came from the source filenames on the old site. Fill in the rest as
 // you verify each one, and the flags clear themselves.
 
+// The full handbook PDF. Internal, so it stays in SharePoint and only opens
+// for signed-in CF accounts. Update here when HR moves or replaces the file.
+const HANDBOOK_PDF = "https://cornerstoneweb-my.sharepoint.com/:b:/g/personal/ryanb_cornerstoneweb_org/IQC3-R_S5lvEQp8Csz8F1v3DARTI-WGY6EBBnGu4jZEU-M8?e=OW1O0L";
+
 export const CONTENT = {
   tagline: "Everything staff need, in one place.",
+
+  // HR dates. Source: HR's 2026 Pay Day Notice and 2026 Holidays PDFs.
+  // Public-safe (no pay amounts, nothing personal). Add next year's rows
+  // below when HR publishes them; past dates drop off the "next" line on
+  // their own. Dates are YYYY-MM-DD.
+  payDates: [
+    // [pay date, period start, period end]
+    ["2026-01-08", "2025-12-21", "2026-01-03"], ["2026-01-22", "2026-01-04", "2026-01-17"],
+    ["2026-02-05", "2026-01-18", "2026-01-31"], ["2026-02-19", "2026-02-01", "2026-02-14"],
+    ["2026-03-05", "2026-02-15", "2026-02-28"], ["2026-03-19", "2026-03-01", "2026-03-14"],
+    ["2026-04-02", "2026-03-15", "2026-03-28"], ["2026-04-16", "2026-03-29", "2026-04-11"],
+    ["2026-04-30", "2026-04-12", "2026-04-25"], ["2026-05-14", "2026-04-26", "2026-05-09"],
+    ["2026-05-28", "2026-05-10", "2026-05-23"], ["2026-06-11", "2026-05-24", "2026-06-06"],
+    ["2026-06-25", "2026-06-07", "2026-06-20"], ["2026-07-09", "2026-06-21", "2026-07-04"],
+    ["2026-07-23", "2026-07-05", "2026-07-18"], ["2026-08-06", "2026-07-19", "2026-08-01"],
+    ["2026-08-20", "2026-08-02", "2026-08-15"], ["2026-09-03", "2026-08-16", "2026-08-29"],
+    ["2026-09-17", "2026-08-30", "2026-09-12"], ["2026-10-01", "2026-09-13", "2026-09-26"],
+    ["2026-10-15", "2026-09-27", "2026-10-10"], ["2026-10-29", "2026-10-11", "2026-10-24"],
+    ["2026-11-12", "2026-10-25", "2026-11-07"], ["2026-11-25", "2026-11-08", "2026-11-21"],
+    ["2026-12-10", "2026-11-22", "2026-12-05"], ["2026-12-24", "2026-12-06", "2026-12-19"],
+    ["2027-01-07", "2026-12-20", "2027-01-02"],
+  ],
+  holidays: [
+    // [date, name]  Offices closed.
+    ["2026-01-01", "New Year's Day"], ["2026-01-19", "Martin Luther King Jr. Day"],
+    ["2026-02-16", "Presidents' Day"], ["2026-05-25", "Memorial Day"],
+    ["2026-06-19", "Juneteenth"], ["2026-07-03", "Independence Day"],
+    ["2026-09-07", "Labor Day"], ["2026-11-26", "Thanksgiving Day"],
+    ["2026-11-27", "Day after Thanksgiving"], ["2026-12-25", "Christmas Day"],
+    ["2026-12-28", "Day after Christmas"],
+  ],
+  // Labor law notices. Government postings, public by law, so they live in
+  // the site files: shared/assets/docs/labor-law/. To update one, replace the
+  // PDF (same file name) and edit the line here.
+  laborNotices: [
+    { group: "California", title: "Workplace Discrimination and Harassment", agency: "Civil Rights Department", file: "ca-discrimination-harassment.pdf" },
+    { group: "California", title: "Sexual Harassment", agency: "Civil Rights Department", file: "ca-sexual-harassment.pdf" },
+    { group: "California", title: "Transgender and Gender Nonconforming Employee Rights", agency: "Civil Rights Department", file: "ca-transgender-rights.pdf" },
+    { group: "California", title: "Family Care, Medical Leave and Pregnancy Disability Leave", agency: "Civil Rights Department", file: "ca-family-medical-pregnancy-leave.pdf" },
+    { group: "California", title: "Rights and Obligations as a Pregnant Employee", agency: "Civil Rights Department", file: "ca-pregnant-employee-rights.pdf" },
+    { group: "California", title: "Paid Sick Leave", agency: "Labor Commissioner", file: "ca-paid-sick-leave.pdf" },
+    { group: "California", title: "Unemployment, Disability and Paid Family Leave", agency: "EDD", file: "ca-edd-ui-di-pfl.pdf" },
+    { group: "California", title: "Safety and Health Protection on the Job", agency: "Cal/OSHA", file: "ca-safety-health-calosha.pdf" },
+    { group: "California", title: "Whistleblower Protections", agency: "Labor Commissioner", file: "ca-whistleblower.pdf" },
+    { group: "California", title: "Time Off to Vote", agency: "Secretary of State", file: "ca-time-off-to-vote.pdf" },
+    { group: "California", title: "Payday Notice (2026 pay dates)", agency: "Cornerstone HR", file: "../hr/2026-Pay-Dates.pdf" },
+    { group: "Federal", title: "Minimum Wage and Overtime (FLSA)", agency: "U.S. Department of Labor", file: "fed-minimum-wage-flsa.pdf" },
+    { group: "Federal", title: "Family and Medical Leave Act (FMLA)", agency: "U.S. Department of Labor", file: "fed-fmla.pdf" },
+    { group: "Federal", title: "Know Your Rights: Workplace Discrimination", agency: "EEOC", file: "fed-eeo-know-your-rights.pdf" },
+    { group: "Federal", title: "Employee Polygraph Protection Act", agency: "U.S. Department of Labor", file: "fed-polygraph.pdf" },
+    { group: "Federal", title: "Uniformed Services Employment Rights (USERRA)", agency: "U.S. Department of Labor", file: "fed-userra.pdf" },
+  ],
+  hrDocs: {
+    payDatesPdf: "../../shared/assets/docs/hr/2026-Pay-Dates.pdf",
+    holidaysPdf: "../../shared/assets/docs/hr/2026-Holidays.pdf",
+    handbookPdf: HANDBOOK_PDF,
+  },
 
   // Photos for the welcome banner on Home. One is picked at random on each
   // visit. Files live in shared/assets/photos/ (web-sized, about 1800px wide).
@@ -202,18 +263,26 @@ export const CONTENT = {
         {
           title: "Pay Dates",
           body: "When you get paid in 2026.",
+          dynamic: "nextPayday",   // body shows the next payday, computed live
           owner: "Bou",
-          reviewed: null,
+          reviewed: "2026-09-22",
           reviewEvery: 12,
-          links: [{ label: "2026 pay dates", url: null, status: "sharepoint" }],
+          links: [
+            { label: "See all pay dates", url: "#/paydates" },
+            { label: "Download PDF", url: "../../shared/assets/docs/hr/2026-Pay-Dates.pdf", download: true },
+          ],
         },
         {
           title: "Holidays",
           body: "When the offices are closed in 2026.",
+          dynamic: "nextHoliday",
           owner: "Bou",
-          reviewed: null,
+          reviewed: "2026-09-22",
           reviewEvery: 12,
-          links: [{ label: "2026 holidays", url: null, status: "sharepoint" }],
+          links: [
+            { label: "See all holidays", url: "#/holidays" },
+            { label: "Download PDF", url: "../../shared/assets/docs/hr/2026-Holidays.pdf", download: true },
+          ],
         },
         {
           title: "Employee Handbook",
@@ -221,7 +290,12 @@ export const CONTENT = {
           owner: "Bou",
           reviewed: "2025-04-23", // from the old file name, Revised 04.23.25
           reviewEvery: 12,
-          links: [{ label: "Read the handbook", url: null, status: "sharepoint" }],
+          // Searchable text lives in the locked handbook_sections table. The PDF
+          // itself stays in SharePoint/OneDrive (link opens for CF accounts only).
+          links: [
+            { label: "Search the handbook", url: "#/handbook" },
+            { label: "Open the PDF", url: HANDBOOK_PDF },
+          ],
         },
         {
           title: "Labor Law Notices",
@@ -229,7 +303,7 @@ export const CONTENT = {
           owner: "Bou",
           reviewed: null,
           reviewEvery: 12,
-          links: [{ label: "Open the folder", url: null, status: "sharepoint" }],
+          links: [{ label: "See all notices", url: "#/laborlaw" }],
         },
         {
           title: "OnePoint",
@@ -299,6 +373,38 @@ export const CONTENT = {
       ],
 
       cards: [],
+    },
+
+    {
+      id: "paydates",
+      accent: "var(--sec-hr)",
+      title: "Pay Dates",
+      blurb: "Paydays are every other Thursday. Earlier when a holiday gets in the way.",
+      enabled: true, placement: "linked", parent: "hr", layout: "paydates", cards: [],
+    },
+    {
+      id: "holidays",
+      accent: "var(--sec-hr)",
+      title: "Holidays",
+      blurb: "Days the offices are closed.",
+      enabled: true, placement: "linked", parent: "hr", layout: "holidays", cards: [],
+    },
+
+    {
+      id: "laborlaw",
+      accent: "var(--sec-hr)",
+      title: "Labor Law Notices",
+      blurb: "The California and federal workplace notices every employee has a right to see.",
+      enabled: true, placement: "linked", parent: "hr", layout: "laborlaw", cards: [],
+    },
+
+    {
+      id: "handbook",
+      accent: "var(--sec-hr)",
+      title: "Employee Handbook",
+      blurb: "Search any policy, or browse by section. Page numbers match the PDF.",
+      // Text comes from the locked handbook_sections table after sign-in.
+      enabled: true, placement: "linked", parent: "hr", layout: "handbook", cards: [],
     },
 
     {

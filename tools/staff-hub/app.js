@@ -144,7 +144,7 @@ function tileValue(key) {
 }
 
 const haystack = (card, section) => [
-  card.title, card.body, card.meta, card.owner, section.title,
+  card.title, card.body, card.meta, card.owner, section.title, card.search,
   ...(card.links ?? []).map((l) => l.label),
 ].filter(Boolean).join(" ").toLowerCase();
 
@@ -164,7 +164,8 @@ function linkHTML(link, primary = false) {
   const note = link.note ? ` <span class="link-note">${esc(link.note)}</span>` : "";
   if (status === "ok") {
     const ext = /^https?:/.test(link.url);
-    return `<li><a class="link${primary ? " link-primary" : ""}" href="${esc(link.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(link.label)}</a>${note}</li>`;
+    const dl = link.download ? ` download target="_blank" rel="noopener"` : (ext ? ' target="_blank" rel="noopener"' : "");
+    return `<li><a class="link${primary ? " link-primary" : ""}${link.download ? " link-dl" : ""}" href="${esc(link.url)}"${dl}>${esc(link.label)}</a>${note}</li>`;
   }
   // Staff see one honest label. "Moving to SharePoint" is internal jargon and
   // means nothing to them; the distinction lives on the admin view.
@@ -185,7 +186,7 @@ function cardHTML(card, section) {
   const click = primaryIdx >= 0 ? " card-click" : "";
   return `<article class="card${soon}${click}" style="--sec:${ac(section)}" data-search="${esc(haystack(card, section))}">
       <h3>${esc(card.title)}</h3>
-      <p class="card-body">${esc(card.body)}</p>
+      <p class="card-body">${card.dynamic ? dynamicBody(card) : esc(card.body)}</p>
       ${meta}${links}
     </article>`;
 }
@@ -415,7 +416,7 @@ function loadStaff(rows) {
   if (!section) return;
   section.cards = STAFF.map((p) => ({
     title: personName(p), body: p.title ?? "", meta: campusOf(p.campus_code).label,
-    owner: "HR", reviewed: null, links: staffLinks(p),
+    owner: "HR", reviewed: null, generated: true, links: staffLinks(p),
   }));
 }
 
@@ -483,6 +484,258 @@ function wireDirectory() {
   apply();
 }
 
+/* ================= HR dates (pay dates, holidays) ================= */
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const parseYmd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const LONG_DAY = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
+const SHORT_DAY = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+const fmtLong = (s) => LONG_DAY.format(parseYmd(s));
+const fmtShort = (s) => SHORT_DAY.format(parseYmd(s));
+function daysUntil(s) {
+  const today = parseYmd(ymd(new Date()));
+  return Math.round((parseYmd(s) - today) / DAY);
+}
+const inDays = (n) => (n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`);
+const nextOf = (rows) => rows.find((r) => r[0] >= ymd(new Date())) ?? null;
+
+// Holidays next to each other (Thanksgiving + day after) read as one closure.
+function nextClosure() {
+  const rows = CONTENT.holidays ?? [];
+  const i = rows.findIndex((r) => r[0] >= ymd(new Date()));
+  if (i < 0) return null;
+  let end = i;
+  while (end + 1 < rows.length && daysBetween(rows[end][0], rows[end + 1][0]) <= 3
+    && sameName(rows[i][1], rows[end + 1][1])) end++;
+  return { start: rows[i][0], end: rows[end][0], name: rows[i][1] };
+}
+const daysBetween = (a, b) => Math.round((parseYmd(b) - parseYmd(a)) / DAY);
+const sameName = (a, b) => b.toLowerCase().includes(a.split(" ")[0].toLowerCase());
+
+function dynamicBody(card) {
+  if (card.dynamic === "nextPayday") {
+    const n = nextOf(CONTENT.payDates ?? []);
+    return n ? `Next payday: <b>${esc(fmtLong(n[0]))}</b> <span class="soft">(${esc(inDays(daysUntil(n[0])))})</span>`
+             : esc(card.body);
+  }
+  if (card.dynamic === "nextHoliday") {
+    const c = nextClosure();
+    if (!c) return esc(card.body);
+    const when = c.start === c.end ? fmtLong(c.start) : `${fmtShort(c.start)} to ${fmtShort(c.end)}`;
+    return `Next closure: <b>${esc(c.name)}</b>, ${esc(when)} <span class="soft">(${esc(inDays(daysUntil(c.start)))})</span>`;
+  }
+  return esc(card.body);
+}
+
+function datesPage(section, headers, rows, pdf) {
+  const parent = sections().find((x) => x.id === section.parent);
+  const today = ymd(new Date());
+  const nextIdx = rows.findIndex((r) => r.key >= today);
+  return `${parent ? `<a class="back-link" href="#/${esc(parent.id)}">← ${esc(parent.title)}</a>` : ""}
+    <div class="page-head has-accent" style="--sec:${ac(section)}">
+      <div><h1 class="page-title">${esc(section.title)}</h1>
+      <p class="page-sub">${esc(section.blurb)}</p></div>
+      ${pdf ? `<a class="btn btn-ghost dl-btn" href="${esc(pdf)}" download target="_blank" rel="noopener">Download PDF</a>` : ""}
+    </div>
+    ${rows.some((r) => r.key < today) ? `<button type="button" class="linkish past-toggle" id="past-toggle">Show earlier dates (${rows.filter((r) => r.key < today).length})</button>` : ""}
+    <table class="dates hide-past" id="dates">
+      <thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map((r, i) => `<tr class="${r.key < today ? "is-past" : ""}${i === nextIdx ? " is-next" : ""}">
+        ${r.cells.map((c, j) => `<td>${j === 0 && i === nextIdx ? `<span class="next-tag">Next</span> ` : ""}${esc(c)}</td>`).join("")}</tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+// Upcoming dates first; earlier ones fold away behind a toggle.
+function wireDates() {
+  const b = $("past-toggle"); if (!b) return;
+  const label = b.textContent;
+  b.addEventListener("click", () => {
+    const hidden = $("dates").classList.toggle("hide-past");
+    b.textContent = hidden ? label : "Hide earlier dates";
+  });
+}
+
+const LABOR_DIR = "../../shared/assets/docs/labor-law/";
+const ICON_DL = svg('<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>');
+
+function laborLawView(section) {
+  const parent = sections().find((x) => x.id === section.parent);
+  const groups = [...new Set((CONTENT.laborNotices ?? []).map((n) => n.group))];
+  return `${parent ? `<a class="back-link" href="#/${esc(parent.id)}">← ${esc(parent.title)}</a>` : ""}
+    <div class="page-head has-accent" style="--sec:${ac(section)}">
+      <div><h1 class="page-title">${esc(section.title)}</h1>
+      <p class="page-sub">${esc(section.blurb)}</p></div>
+    </div>
+    ${groups.map((g) => `
+      <h2 class="block-head">${esc(g)}</h2>
+      <ul class="docs">${CONTENT.laborNotices.filter((n) => n.group === g).map((n) => `
+        <li><a class="doc" href="${esc(LABOR_DIR + n.file)}" target="_blank" rel="noopener" download>
+          <span class="doc-main"><b>${esc(n.title)}</b><span>${esc(n.agency)}</span></span>
+          <span class="doc-dl" aria-hidden="true">${ICON_DL}<span>PDF</span></span>
+        </a></li>`).join("")}
+      </ul>`).join("")}`;
+}
+
+function payDatesView(section) {
+  const rows = (CONTENT.payDates ?? []).map(([pay, a, b]) => ({
+    key: pay, cells: [fmtLong(pay), `${fmtShort(a)} to ${fmtShort(b)}`],
+  }));
+  return datesPage(section, ["Payday", "Pay period"], rows, CONTENT.hrDocs?.payDatesPdf);
+}
+function holidaysView(section) {
+  const rows = (CONTENT.holidays ?? []).map(([d, name]) => ({ key: d, cells: [fmtLong(d), name] }));
+  return datesPage(section, ["Date", "Holiday"], rows, CONTENT.hrDocs?.holidaysPdf);
+}
+
+/* ================= employee handbook ================= */
+// Sections come from the locked handbook_sections table after sign-in.
+let HANDBOOK = [];
+
+// The PDF's headings are ALL CAPS. Shown as title case, keeping acronyms.
+const KEEP_CAPS = new Set(["PTO", "FMLA", "CFRA", "COBRA", "HIPPA", "HIPAA", "PDL", "IRS", "W-2"]);
+const SMALL = new Set(["and", "of", "or", "the", "for", "on", "to", "from", "with", "in", "at", "by", "a", "an"]);
+function niceTitle(t) {
+  if (/[a-z]/.test(t)) return t;
+  return t.split(" ").map((w, i) => {
+    const bare = w.replace(/[^A-Z0-9-]/g, "");
+    if (KEEP_CAPS.has(bare) || /\d/.test(w)) return w;
+    const lw = w.toLowerCase();
+    if (i > 0 && SMALL.has(lw)) return lw;
+    return lw.replace(/^(\W*)(\w)/, (m, a, b) => a + b.toUpperCase());
+  }).join(" ");
+}
+
+// Sections also become cards in the Handbook section, so the main search
+// finds "mileage" and points at Expense Reimbursement. Headings with no text
+// of their own (like "Character & Conduct") are skipped as results.
+function loadHandbook(rows) {
+  HANDBOOK = rows.slice().sort((a, b) => a.sort_order - b.sort_order)
+    .map((r) => ({ ...r, nice: niceTitle(r.title) }));
+  const section = sections().find((s) => s.id === "handbook");
+  if (!section) return;
+  section.cards = HANDBOOK.filter((r) => r.body).map((r) => ({
+    title: r.nice, body: snippet(r.body), meta: CONFIG.labels.hbPage(r.page), search: r.body,
+    owner: "Bou", reviewed: null, generated: true,
+    links: [{ label: "Read this section", url: `#/handbook/${r.sort_order}` }],
+  }));
+}
+const flat = (t) => t.replace(/[•\s]+/g, " ").trim();
+function snippet(body, n = 140) {
+  const t = flat(body);
+  return t.length > n ? t.slice(0, t.lastIndexOf(" ", n)) + "…" : t;
+}
+
+// Wraps every match of term in <mark>. Everything else is escaped.
+function hl(text, term) {
+  if (!term) return esc(text);
+  const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  let out = "", last = 0;
+  for (const m of text.matchAll(re)) {
+    out += esc(text.slice(last, m.index)) + `<mark>${esc(m[0])}</mark>`;
+    last = m.index + m[0].length;
+  }
+  return out + esc(text.slice(last));
+}
+
+// Body text is plain: blank lines split paragraphs, "•" marks a bullet (the
+// PDF extraction leaves stray ones, so runs of them collapse to one).
+function hbBodyHTML(body, term) {
+  const t = body.replace(/(?:\s*•)+\s*\n\n/g, "\n\n• ").replace(/^\n\n/, "");
+  const paras = t.split(/\n{2,}/).map((x) => x.replace(/\s*\n\s*/g, " ").trim()).filter(Boolean);
+  let html = "", list = [];
+  const flush = () => { if (list.length) { html += `<ul>${list.join("")}</ul>`; list = []; } };
+  for (const p of paras) {
+    if (p.startsWith("•")) list.push(`<li>${hl(p.replace(/^[•\s]+/, ""), term)}</li>`);
+    else { flush(); html += `<p>${hl(p.replace(/[\s•]+$/, ""), term)}</p>`; }
+  }
+  flush();
+  return html;
+}
+
+function handbookView(section) {
+  const parent = sections().find((x) => x.id === section.parent);
+  const pdf = CONTENT.hrDocs?.handbookPdf;
+  const edition = HANDBOOK[0]?.edition;
+  const items = HANDBOOK.map((r) => {
+    const q = `${r.title} ${flat(r.body)}`.toLowerCase();
+    const head = `<span class="hb-t">${esc(r.nice)}</span><span class="hb-p">${esc(CONFIG.labels.hbPage(r.page))}</span>`;
+    return r.body
+      ? `<li class="hb-item lvl-${r.level}" id="hb-${r.sort_order}" data-q="${esc(q)}">
+          <details><summary>${head}</summary><div class="hb-body" data-i="${r.sort_order}"></div></details></li>`
+      : `<li class="hb-item hb-group lvl-${r.level}" id="hb-${r.sort_order}" data-q="${esc(q)}"><div class="hb-head">${head}</div></li>`;
+  }).join("");
+  return `${parent ? `<a class="back-link" href="#/${esc(parent.id)}">← ${esc(parent.title)}</a>` : ""}
+    <div class="page-head has-accent" style="--sec:${ac(section)}">
+      <div><h1 class="page-title">${esc(section.title)}</h1>
+      <p class="page-sub">${esc(section.blurb)}</p></div>
+      ${pdf ? `<a class="btn btn-ghost dl-btn" href="${esc(pdf)}" target="_blank" rel="noopener">${esc(CONFIG.labels.hbPdf)}</a>` : ""}
+    </div>
+    ${HANDBOOK.length ? `
+    <div class="dir-tools hb-tools">
+      <input type="search" id="hb-q" class="dir-q" placeholder="${esc(CONFIG.labels.hbSearch)}" aria-label="Search the handbook" autocomplete="off">
+      <button type="button" class="chip" id="hb-all">${esc(CONFIG.labels.hbExpand)}</button>
+    </div>
+    <p class="dir-count" id="hb-count" aria-live="polite"></p>
+    <ol class="hb" id="hb-list">${items}</ol>
+    <p class="empty" id="hb-none" hidden>${esc(CONFIG.labels.hbNone)}</p>
+    ${edition ? `<p class="hb-edition">${esc(CONFIG.labels.hbEdition(edition))}</p>` : ""}`
+    : `<p class="empty">${esc(CONFIG.labels.comingSoon)}</p>`}`;
+}
+
+function wireHandbook(openId) {
+  const q = $("hb-q"); if (!q) return;
+  const byId = new Map(HANDBOOK.map((r) => [String(r.sort_order), r]));
+  const fill = (li, term) => {
+    const box = li.querySelector(".hb-body");
+    if (box) box.innerHTML = hbBodyHTML(byId.get(box.dataset.i).body, term);
+  };
+  // Text is drawn when a section opens, not up front: 119 sections is a lot of DOM.
+  for (const d of document.querySelectorAll("#hb-list details")) {
+    d.addEventListener("toggle", () => { if (d.open) fill(d.parentElement, q.value.trim()); });
+  }
+  let timer = null;
+  const apply = () => {
+    const raw = q.value.trim(), term = raw.toLowerCase();
+    let n = 0;
+    const items = [...$("hb-list").children];
+    for (const li of items) {
+      const hit = !term || li.dataset.q.includes(term);
+      li.hidden = !hit;
+      if (hit && !li.classList.contains("hb-group")) n++;
+      const d = li.querySelector("details");
+      if (!d) continue;
+      d.open = Boolean(term) && hit && n <= 25;   // open the first 25 matches
+      if (d.open) fill(li, raw);
+      const t = li.querySelector(".hb-t");
+      t.innerHTML = hl(byId.get(li.id.slice(3)).nice, raw);
+    }
+    // Keep a heading visible when one of its sub-sections matches.
+    let group = null;
+    for (const li of items) {
+      if (li.classList.contains("lvl-0")) group = li;
+      else if (!li.hidden && group) group.hidden = false;
+    }
+    $("hb-count").textContent = CONFIG.labels.hbCount(n, raw);
+    $("hb-none").hidden = n > 0;
+  };
+  q.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(apply, 120); });
+  $("hb-all").addEventListener("click", () => {
+    const ds = [...document.querySelectorAll("#hb-list li:not([hidden]) details")];
+    const open = !ds.every((d) => d.open);
+    ds.forEach((d) => { d.open = open; });
+    $("hb-all").textContent = open ? CONFIG.labels.hbCollapse : CONFIG.labels.hbExpand;
+  });
+  apply();
+  // #/handbook/42 opens section 42 and scrolls to it (from a search result).
+  const target = openId != null && $("hb-" + openId);
+  if (target) {
+    const d = target.querySelector("details");
+    if (d) { d.open = true; fill(target, ""); }
+    target.classList.add("is-target");
+    requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+  }
+}
+
 function searchView(q) {
   const hits = allCards().filter(({ card, section }) => haystack(card, section).includes(q));
   if (!hits.length) {
@@ -519,6 +772,7 @@ export function drift() {
     if (!s.enabled && s.cards.length > 0) { parked.push({ section: s }); continue; }
     if (!s.enabled || s.cards.length === 0) { empty.push({ section: s }); continue; }
     for (const c of s.cards) {
+      if (c.generated) continue;   // built from data at sign-in; reviewed at the source
       const f = freshness(c, s);
       if (f.state === "overdue") overdue.push({ card: c, section: s, f });
       else if (f.state === "never") never.push({ card: c, section: s, f });
@@ -653,7 +907,8 @@ function route() {
     $("view").innerHTML = searchView(q);
     return;
   }
-  const id = (location.hash.replace(/^#\/?/, "") || "home").toLowerCase();
+  // "#/handbook/42" = section "handbook", sub "42".
+  const [id, sub] = (location.hash.replace(/^#\/?/, "") || "home").toLowerCase().split("/");
 
   if (id === "admin") {
     renderNav(null);
@@ -671,6 +926,10 @@ function route() {
   $("view").innerHTML = section
     ? (section.layout === "brand" ? brandView(section)
       : section.layout === "directory" ? directoryView(section)
+      : section.layout === "laborlaw" ? laborLawView(section)
+      : section.layout === "handbook" ? handbookView(section)
+      : section.layout === "paydates" ? payDatesView(section)
+      : section.layout === "holidays" ? holidaysView(section)
       : sectionView(section))
     : homeView();
   $("search").placeholder = section
@@ -679,6 +938,8 @@ function route() {
   document.title = `${section ? section.title + " · " : ""}Staff Hub | Cornerstone Fellowship`;
   if (section?.layout === "brand") wireSwatches();
   if (section?.layout === "directory") wireDirectory();
+  if (section?.layout === "handbook") wireHandbook(sub);
+  if (section?.layout === "paydates" || section?.layout === "holidays") wireDates();
 }
 
 // Swatches copy their hex. Clipboard can be unavailable or refused, so the
@@ -802,12 +1063,20 @@ async function start() {
     return showGate(CONFIG.labels.gateNotStaff(session.user.email ?? "That"),
       CONFIG.labels.gateNotStaffButton, () => signOut());
   }
-  const [cards, staff] = await Promise.all([
+  const [cards, staff, handbook] = await Promise.all([
     selectAll("hub_cards", "sort_order"),
     selectAll("staff_directory", "last_name"),
+    selectAll("handbook_sections", "sort_order"),
   ]);
   mergeProtectedCards(cards);
   loadStaff(staff);
+  loadHandbook(handbook);
+  // Labor law notices become cards too, so the main search finds "sick leave".
+  const labor = sections().find((x) => x.id === "laborlaw");
+  if (labor) labor.cards = (CONTENT.laborNotices ?? []).map((n) => ({
+    title: n.title, body: `${n.group} notice from ${n.agency}.`, owner: "Bou", reviewed: null, generated: true,
+    links: [{ label: "Download PDF", url: LABOR_DIR + n.file, download: true }],
+  }));
   $("signin").hidden = true;
   document.body.classList.remove("is-locked");
   renderMe(session);

@@ -66,6 +66,14 @@ export const CONFIG = {
     dirCall: "Call",
     dirEmail: "Email",
     dirChatLong: "Chat in Teams",
+    hbSearch: "Search the handbook, like \"mileage\" or \"jury duty\"",
+    hbCount: (n, term) => term ? `${n} ${n === 1 ? "section mentions" : "sections mention"} "${term}"` : `${n} sections`,
+    hbNone: "Nothing in the handbook matches that. Try a shorter word, or ask HR.",
+    hbPdf: "Open the PDF",
+    hbPage: (n) => `Page ${n}`,
+    hbEdition: (e) => `Edition: ${e}`,
+    hbExpand: "Expand all",
+    hbCollapse: "Collapse all",
     dirCallLong: "Call in Teams",
 
     // Sign-in screen
