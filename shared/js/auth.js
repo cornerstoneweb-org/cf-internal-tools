@@ -25,8 +25,23 @@ export function isStaff(session) {
   return email.endsWith("@" + STAFF_DOMAIN);
 }
 
+// The person's profile (name etc.). A session restored from the browser's
+// storage does not always carry user_metadata, so fall back to the signed
+// access token, which always includes it.
+export function userMeta(session) {
+  const m = session?.user?.user_metadata;
+  if (m && (m.full_name || m.name)) return m;
+  try {
+    const part = session.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const claims = JSON.parse(decodeURIComponent(escape(atob(part))));
+    return { ...(claims.user_metadata ?? {}), ...(m ?? {}) };
+  } catch {
+    return m ?? {};
+  }
+}
+
 export function displayName(session) {
-  const m = session?.user?.user_metadata ?? {};
+  const m = userMeta(session);
   return m.full_name || m.name || session?.user?.email || "Signed in";
 }
 

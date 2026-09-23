@@ -2,7 +2,7 @@ import { CONFIG } from "./config.js";
 import { CONTENT } from "./content.js";
 import { CAMPUSES } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
-import { getSession, isStaff, displayName, signIn, signOut, selectAll } from "../../shared/js/auth.js";
+import { getSession, isStaff, displayName, userMeta, signIn, signOut, selectAll } from "../../shared/js/auth.js";
 import { watchForNewVersion } from "../../shared/js/version-check.js";
 
 const LIB = "../../shared/assets/brand/library/";
@@ -761,7 +761,7 @@ const initials = (name) => String(name).split(/[\s@.]+/).filter(Boolean).slice(0
   .map((w) => w[0].toUpperCase()).join("") || "CF";
 
 function firstNameOf(session) {
-  const m = session?.user?.user_metadata ?? {};
+  const m = userMeta(session);
   const full = m.given_name || m.full_name || m.name || "";
   // Only use it if it looks like a real name, not an email address.
   return full.includes("@") ? "" : full.trim().split(/\s+/)[0] ?? "";
