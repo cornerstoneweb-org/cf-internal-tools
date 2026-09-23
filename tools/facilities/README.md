@@ -1,0 +1,15 @@
+# Facilities Request
+
+Owner: Joe
+
+## Status
+Not started.
+
+## Data source
+TBD. If a workbook is the source of truth, it lives in OneDrive under
+`CF Internal Tools/<tool folder>/source-workbooks/` and the build script
+writes JSON into `data/`.
+
+## Buy vs build
+Before building this out, confirm Microsoft Forms, Lists or Power Automate
+does not already solve it. See docs/conventions.md.

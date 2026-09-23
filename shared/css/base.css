@@ -1,0 +1,195 @@
+/* Shared app shell for every CF internal tool: sidebar, top bar, pills. */
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+a { color: var(--teal-d); }
+::selection { background: var(--teal); color: #000; }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 4px; }
+
+.skip {
+  position: absolute; left: -9999px; z-index: 40;
+  background: var(--teal); color: #000; font-weight: 800;
+  padding: var(--space-2) var(--space-3); border-radius: var(--r);
+}
+.skip:focus { left: var(--space-3); top: var(--space-3); }
+
+/* ---------- Sidebar ---------- */
+.side {
+  width: var(--sidebar); flex: none;
+  background: var(--card); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  padding: var(--space-4) 0;
+  position: sticky; top: 0; height: 100vh;
+}
+.side-brand { padding: 0 22px var(--space-4); border-bottom: 1px solid var(--line); margin-bottom: var(--space-3); }
+.side-brand img { height: 26px; width: auto; display: block; }
+.side-nav { flex: 1; min-width: 0; max-width: 100%; padding: 0 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+.side-nav a {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: var(--r);
+  text-decoration: none; color: var(--slate);
+  font-size: 14.5px; font-weight: 700;
+}
+.side-nav a .dot {
+  width: 8px; height: 8px; border-radius: 3px; flex: none;
+  background: var(--sec, #CBD3D7); opacity: .45;
+  transition: opacity .15s, transform .15s;
+}
+.side-nav a:hover { background: var(--bg); color: var(--ink); }
+.side-nav a:hover .dot { opacity: 1; }
+.side-nav a.is-active {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--sec, var(--teal)) 11%, white);
+}
+.side-nav a.is-active .dot { opacity: 1; transform: scale(1.15); }
+.side-nav a.nav-off { opacity: .55; }
+
+/* Parked sections: visible so staff know they are coming, but not links and
+   not hoverable, so nothing invites a click that goes nowhere. */
+.nav-parked {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: var(--r);
+  color: var(--faint); font-size: 14.5px; font-weight: 700;
+  cursor: default;
+}
+.nav-parked .dot { width: 8px; height: 8px; border-radius: 3px; background: #CBD3D7; flex: none; }
+.side-label {
+  padding: var(--space-3) 14px var(--space-1);
+  font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--faint); font-weight: 800;
+}
+.side-me {
+  margin: var(--space-3) 12px 0; padding: 12px;
+  border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px;
+}
+.avatar {
+  width: 33px; height: 33px; border-radius: 50%; flex: none;
+  background: var(--teal); color: #000;
+  display: grid; place-items: center; font-size: 12.5px; font-weight: 800;
+}
+.side-me b { display: block; font-size: 13.5px; font-weight: 800; }
+.side-me span { font-size: 11.5px; color: var(--faint); }
+
+/* ---------- Main + top bar ---------- */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  display: flex; align-items: center; gap: var(--space-2) var(--space-3);
+  flex-wrap: wrap;
+  padding: 14px var(--space-4);
+  background: var(--card); border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 5;
+}
+.search {
+  flex: 1 1 220px; max-width: 560px; min-width: 0; position: relative;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 10px 14px;
+}
+.search svg { width: 17px; height: 17px; color: var(--faint); flex: none; }
+.search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: 14.5px; color: var(--ink); }
+.search input::placeholder { color: var(--faint); }
+.search input::-webkit-search-cancel-button { display: none; }
+.search:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(6,147,178,.12); }
+.search kbd {
+  font-family: var(--font); font-size: 10.5px; font-weight: 700;
+  color: var(--faint); background: var(--card);
+  border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px;
+}
+.search-clear { background: none; border: 0; color: var(--faint); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 2px; }
+.search-clear:hover { color: var(--ink); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+.btn {
+  background: var(--teal); color: #000; border: 0;
+  border-radius: var(--r); padding: 11px 20px;
+  font: inherit; font-size: 13.5px; font-weight: 800;
+  text-decoration: none; white-space: nowrap; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--teal-d); color: #fff; }
+.btn-ghost { background: var(--card); border: 1px solid var(--line-2); color: var(--ink); }
+.btn-ghost:hover { background: var(--bg); color: var(--ink); border-color: var(--line-2); }
+
+.content { flex: 1; padding: var(--space-4); max-width: var(--max-width); width: 100%; }
+
+/* ---------- Pills ---------- */
+.pill {
+  font-size: 11px; font-weight: 800; white-space: nowrap;
+  padding: 4px 10px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.pill-ok   { background: var(--lime-wash);   color: var(--lime-d); }
+.pill-warn { background: var(--orange-wash); color: var(--orange-d); }
+.pill-mute { background: #EEF1F2;            color: #6F7C81; }
+/* Coming soon, in the section's own accent. 12% tint ground, 52% mix text:
+   the highest mix that clears 4.5:1 for every CF accent, checked on white
+   and on its own tint. Do not raise it without re-checking lime. */
+.pill-soon {
+  background: color-mix(in srgb, var(--sec, var(--teal)) 12%, #fff);
+  color: color-mix(in srgb, var(--sec, var(--teal)) 52%, black);
+}
+
+/* ---------- Narrow ---------- */
+@media (max-width: 900px) {
+  body { display: block; }
+  .side {
+    width: 100%; height: auto; position: static;
+    border-right: 0; border-bottom: 1px solid var(--line);
+    padding: var(--space-3) 0;
+  }
+  .side-brand { padding: 0 var(--space-3) var(--space-3); }
+  .side-nav { flex-direction: row; overflow-x: auto; gap: var(--space-1); padding: 0 var(--space-3); scrollbar-width: none; }
+  .side-nav::-webkit-scrollbar { display: none; }
+  .side-nav a { white-space: nowrap; }
+  .side-nav a .dot { display: none; }
+  .side-label { display: none; }
+  .side-me { display: none; }
+  .topbar { padding: var(--space-2) var(--space-3); flex-wrap: nowrap; }
+  .search { max-width: none; }
+  .search kbd { display: none; }
+  .side { padding: var(--space-2) 0 var(--space-3); }
+  .side-brand { padding: 0 var(--space-3) var(--space-2); }
+  .side-brand img { height: 22px; }
+  .content { padding: var(--space-3); }
+}
+
+@media (max-width: 620px) {
+  .topbar-right { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ---------- Tool directory (repo root index) ---------- */
+.tool-list {
+  list-style: none; padding: 0; margin: var(--space-4) 0 0;
+  display: grid; gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.tool-card {
+  display: block; padding: var(--space-4);
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); box-shadow: var(--shadow);
+  text-decoration: none; color: inherit;
+  transition: border-color .15s, transform .15s;
+}
+.tool-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+.tool-card h2 { font-size: 1.02rem; margin-bottom: var(--space-1); }
+.tool-card p { margin: 0; color: var(--slate); font-size: .88rem; }
+.tool-card .owner { display: block; margin-top: var(--space-2); font-size: .72rem; color: var(--faint); font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
