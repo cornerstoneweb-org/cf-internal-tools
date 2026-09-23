@@ -45,7 +45,29 @@ export const CONFIG = {
     label: "Hub admin",
   },
 
+  // Campus codes used in the staff roster. Label is what staff see.
+  campuses: {
+    LV:  { label: "Livermore",        color: "var(--teal)" },
+    BW:  { label: "Brentwood",        color: "var(--orange)" },
+    WC:  { label: "Walnut Creek",     color: "#32B9DB" },
+    SRV: { label: "San Ramon Valley", color: "var(--lime-d)" },
+    HW:  { label: "Hayward",          color: "#07AED9" },
+    ON:  { label: "Online",           color: "#04758F" },
+    CS:  { label: "Central Support",  color: "#4A5464" },
+  },
+
   labels: {
+    // Staff directory
+    dirSearch: "Search by name or role",
+    dirAll: "All",
+    dirCount: (n) => `${n} ${n === 1 ? "person" : "people"}`,
+    dirNone: "No one matches that. Try a first name, or clear the filters.",
+    dirChat: "Chat",
+    dirCall: "Call",
+    dirEmail: "Email",
+    dirChatLong: "Chat in Teams",
+    dirCallLong: "Call in Teams",
+
     // Sign-in screen
     gateTitle: "Staff Hub",
     gateMsg: "Sign in with your Cornerstone Microsoft account to continue.",

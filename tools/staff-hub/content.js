@@ -302,6 +302,20 @@ export const CONTENT = {
     },
 
     {
+      id: "directory",
+      accent: "var(--sec-guides)",
+      title: "Staff Directory",
+      blurb: "Find anyone on staff and reach them in Teams.",
+      enabled: true,
+      // People are NOT listed here. They load from the locked staff_directory
+      // table in Supabase after sign-in, so the roster never sits in the
+      // public repo. See db/migrations/0003_staff_directory.sql.
+      layout: "directory",
+      reviewEvery: 6,
+      cards: [],
+    },
+
+    {
       id: "values",
       accent: "var(--sec-values)",
       title: "Our Staff Values",

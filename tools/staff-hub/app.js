@@ -384,6 +384,96 @@ function brandView(section) {
     + downloads;
 }
 
+/* ================= staff directory ================= */
+// People come from the locked staff_directory table after sign-in.
+let STAFF = [];
+const campusOf = (code) => CONFIG.campuses?.[code] ?? { label: code, color: "var(--slate)" };
+const personName = (p) => `${p.first_name} ${p.last_name}`;
+const teams = (kind, email) => `https://teams.microsoft.com/l/${kind}/0/0?users=${encodeURIComponent(email)}`;
+
+function staffLinks(p) {
+  return [
+    { label: CONFIG.labels.dirChatLong, url: teams("chat", p.email) },
+    { label: CONFIG.labels.dirCallLong, url: teams("call", p.email) },
+    { label: CONFIG.labels.dirEmail, url: `mailto:${p.email}` },
+  ];
+}
+
+// People also become cards in the Staff Directory section, so the global
+// search finds them ("Dennis", "facilities") like any other card.
+function loadStaff(rows) {
+  STAFF = rows.slice().sort((a, b) =>
+    a.last_name.localeCompare(b.last_name) || a.first_name.localeCompare(b.first_name));
+  const section = sections().find((s) => s.id === "directory");
+  if (!section) return;
+  section.cards = STAFF.map((p) => ({
+    title: personName(p), body: p.title ?? "", meta: campusOf(p.campus_code).label,
+    owner: "HR", reviewed: null, links: staffLinks(p),
+  }));
+}
+
+const ICON_CHAT = svg('<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1z"/>');
+const ICON_CALL = svg('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/>');
+const ICON_MAIL = svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>');
+
+function directoryView(section) {
+  const codes = [...new Set(STAFF.map((p) => p.campus_code))]
+    .sort((a, b) => campusOf(a).label.localeCompare(campusOf(b).label));
+  const people = STAFF.map((p) => {
+    const c = campusOf(p.campus_code);
+    const q = `${personName(p)} ${p.title ?? ""} ${c.label}`.toLowerCase();
+    return `<li class="person" data-campus="${esc(p.campus_code)}" data-q="${esc(q)}" style="--camp:${esc(c.color)}">
+      <span class="person-av" aria-hidden="true">${esc((p.first_name[0] + p.last_name[0]).toUpperCase())}</span>
+      <span class="person-main">
+        <b>${esc(personName(p))}</b>
+        <span class="person-title">${esc(p.title ?? "")}</span>
+        <span class="person-camp">${esc(c.label)}</span>
+      </span>
+      <span class="person-acts">
+        <a href="${esc(teams("chat", p.email))}" target="_blank" rel="noopener" title="${esc(CONFIG.labels.dirChatLong)}" aria-label="${esc(CONFIG.labels.dirChatLong + " with " + personName(p))}">${ICON_CHAT}<span>${esc(CONFIG.labels.dirChat)}</span></a>
+        <a href="${esc(teams("call", p.email))}" target="_blank" rel="noopener" title="${esc(CONFIG.labels.dirCallLong)}" aria-label="${esc(CONFIG.labels.dirCallLong + " " + personName(p))}">${ICON_CALL}<span>${esc(CONFIG.labels.dirCall)}</span></a>
+        <a href="mailto:${esc(p.email)}" title="${esc(p.email)}" aria-label="${esc("Email " + personName(p))}">${ICON_MAIL}<span>${esc(CONFIG.labels.dirEmail)}</span></a>
+      </span>
+    </li>`;
+  }).join("");
+  return `<div class="page-head has-accent" style="--sec:${ac(section)}">
+      <div><h1 class="page-title">${esc(section.title)}</h1>
+      <p class="page-sub">${esc(section.blurb)}</p></div>
+    </div>
+    <div class="dir-tools">
+      <input type="search" id="dir-q" class="dir-q" placeholder="${esc(CONFIG.labels.dirSearch)}" aria-label="${esc(CONFIG.labels.dirSearch)}" autocomplete="off">
+      <div class="dir-chips" role="group" aria-label="Campus">
+        <button type="button" class="chip is-on" data-campus="">${esc(CONFIG.labels.dirAll)}</button>
+        ${codes.map((c) => `<button type="button" class="chip" data-campus="${esc(c)}" style="--camp:${esc(campusOf(c).color)}">${esc(campusOf(c).label)}</button>`).join("")}
+      </div>
+    </div>
+    <p class="dir-count" id="dir-count" aria-live="polite"></p>
+    <ul class="people" id="dir-list">${people}</ul>
+    <p class="empty" id="dir-none" hidden>${esc(CONFIG.labels.dirNone)}</p>`;
+}
+
+function wireDirectory() {
+  const q = $("dir-q"); if (!q) return;
+  let campus = "";
+  const apply = () => {
+    const term = q.value.trim().toLowerCase();
+    let n = 0;
+    for (const li of $("dir-list").children) {
+      const show = (!campus || li.dataset.campus === campus) && (!term || li.dataset.q.includes(term));
+      li.hidden = !show; if (show) n++;
+    }
+    $("dir-count").textContent = CONFIG.labels.dirCount(n);
+    $("dir-none").hidden = n > 0;
+  };
+  q.addEventListener("input", apply);
+  document.querySelectorAll(".dir-chips .chip").forEach((b) => b.addEventListener("click", () => {
+    campus = b.dataset.campus;
+    document.querySelectorAll(".dir-chips .chip").forEach((x) => x.classList.toggle("is-on", x === b));
+    apply();
+  }));
+  apply();
+}
+
 function searchView(q) {
   const hits = allCards().filter(({ card, section }) => haystack(card, section).includes(q));
   if (!hits.length) {
@@ -570,13 +660,16 @@ function route() {
   const section = found?.enabled && !onHome(found) ? found : null;
   renderNav(section ? section.id : "home");
   $("view").innerHTML = section
-    ? (section.layout === "brand" ? brandView(section) : sectionView(section))
+    ? (section.layout === "brand" ? brandView(section)
+      : section.layout === "directory" ? directoryView(section)
+      : sectionView(section))
     : homeView();
   $("search").placeholder = section
     ? CONFIG.labels.sectionSearchPlaceholder(section.title)
     : CONFIG.labels.searchPlaceholder;
   document.title = `${section ? section.title + " · " : ""}Staff Hub | Cornerstone Fellowship`;
   if (section?.layout === "brand") wireSwatches();
+  if (section?.layout === "directory") wireDirectory();
 }
 
 // Swatches copy their hex. Clipboard can be unavailable or refused, so the
@@ -700,7 +793,12 @@ async function start() {
     return showGate(CONFIG.labels.gateNotStaff(session.user.email ?? "That"),
       CONFIG.labels.gateNotStaffButton, () => signOut());
   }
-  mergeProtectedCards(await selectAll("hub_cards", "sort_order"));
+  const [cards, staff] = await Promise.all([
+    selectAll("hub_cards", "sort_order"),
+    selectAll("staff_directory", "last_name"),
+  ]);
+  mergeProtectedCards(cards);
+  loadStaff(staff);
   $("signin").hidden = true;
   document.body.classList.remove("is-locked");
   renderMe(session);
