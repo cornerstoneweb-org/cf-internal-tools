@@ -156,12 +156,15 @@ const linkStatus = (link) => link.status ?? (link.url ? "ok" : "pending");
 const cardSoon = (card) =>
   Boolean(card.links?.length) && card.links.every((l) => linkStatus(l) !== "ok");
 
-function linkHTML(link) {
+// primary: the card's first working link. It stretches over the whole card
+// (CSS .link-primary::before), so clicking anywhere on the card opens it.
+// Any other links on the card sit above that layer and still work on their own.
+function linkHTML(link, primary = false) {
   const status = linkStatus(link);
   const note = link.note ? ` <span class="link-note">${esc(link.note)}</span>` : "";
   if (status === "ok") {
     const ext = /^https?:/.test(link.url);
-    return `<li><a class="link" href="${esc(link.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(link.label)}</a>${note}</li>`;
+    return `<li><a class="link${primary ? " link-primary" : ""}" href="${esc(link.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}>${esc(link.label)}</a>${note}</li>`;
   }
   // Staff see one honest label. "Moving to SharePoint" is internal jargon and
   // means nothing to them; the distinction lives on the admin view.
@@ -175,9 +178,12 @@ function cardHTML(card, section) {
   // bookkeeping, and stale bookkeeping tells staff the wrong story. It lives
   // on the admin view instead.
   const meta = card.meta ? `<p class="card-meta">${esc(card.meta)}</p>` : "";
-  const links = card.links?.length ? `<ul class="card-links">${card.links.map(linkHTML).join("")}</ul>` : "";
+  const primaryIdx = (card.links ?? []).findIndex((l) => linkStatus(l) === "ok");
+  const links = card.links?.length
+    ? `<ul class="card-links">${card.links.map((l, i) => linkHTML(l, i === primaryIdx)).join("")}</ul>` : "";
   const soon = cardSoon(card) ? " card-soon" : "";
-  return `<article class="card${soon}" style="--sec:${ac(section)}" data-search="${esc(haystack(card, section))}">
+  const click = primaryIdx >= 0 ? " card-click" : "";
+  return `<article class="card${soon}${click}" style="--sec:${ac(section)}" data-search="${esc(haystack(card, section))}">
       <h3>${esc(card.title)}</h3>
       <p class="card-body">${esc(card.body)}</p>
       ${meta}${links}

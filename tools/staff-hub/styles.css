@@ -587,3 +587,13 @@ body.is-locked .side, body.is-locked .main, body.is-locked .skip { display: none
 }
 .back-link { display: inline-block; margin-bottom: var(--space-2); font-size: .85rem; font-weight: 700; color: var(--teal-d); text-decoration: none; }
 .back-link:hover { text-decoration: underline; }
+
+/* ---------- Whole-card click ---------- */
+/* The card's first working link covers the whole card, so a click anywhere
+   opens it. Other links on the card are lifted above that layer. */
+.card-click { cursor: pointer; }
+.card-click .link-primary::before { content: ""; position: absolute; inset: 0; z-index: 0; }
+.card-click .card-links a:not(.link-primary), .card-click .link-note { position: relative; z-index: 1; }
+.card-click:hover .link-primary::after { opacity: 1; transform: translateX(0); }
+.card-click:has(.link-primary:focus-visible) { outline: 3px solid color-mix(in srgb, var(--sec, var(--teal)) 45%, transparent); outline-offset: 2px; }
+.card-click .link-primary:focus-visible { outline: none; }
