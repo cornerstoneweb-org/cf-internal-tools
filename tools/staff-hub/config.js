@@ -66,6 +66,44 @@ export const CONFIG = {
     welcomeLede: "We're so glad you're here.",
     welcomeBody: [],
     heroSub: "Welcome to the Staff Hub. We're so glad you're here.",
+
+    // The big greeting on Home. One is picked at random per visit from the
+    // list for the time of day (morning before noon, afternoon until 5pm,
+    // evening after). Add, cut or reword freely. Keep them short: they are
+    // the headline.
+    greetings: {
+      morning: [
+        "Good morning",
+        "Rise and shine",
+        "Fresh day, fresh start",
+        "Morning, sunshine",
+        "Hello, early bird",
+        "Let's make it a good one",
+        "Welcome back, friend",
+        "Top of the morning",
+      ],
+      afternoon: [
+        "Good afternoon",
+        "Coffee number two? No judgment",
+        "Afternoon, friend",
+        "Hello, halfway point",
+        "Snack o'clock",
+        "Hang in there",
+        "Look at you, still crushing it",
+        "Hope your day's been a good one",
+        "The afternoon stretch",
+      ],
+      evening: [
+        "Good evening",
+        "Thanks for all you did today",
+        "Well done today",
+        "Night owl mode: on",
+        "Evening, friend",
+        "That's a wrap (almost)",
+        "Look who's still here",
+        "Well, hello there, night owl",
+      ],
+    },
     quickHeading: "Quick links",
     valuesHeading: "How we work around here",
     valuesLead: "We are",

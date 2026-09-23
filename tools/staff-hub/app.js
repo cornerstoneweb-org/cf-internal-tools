@@ -188,9 +188,18 @@ function cardsHTML(section, cards = section.cards) {
 }
 
 /* ================= views ================= */
+// Picked once per visit so the greeting does not change while you click
+// around. Falls back to the plain greeting if a list is empty.
+let greeting = null;
 function greetingText() {
+  if (greeting) return greeting;
   const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  const part = h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
+  const list = CONFIG.labels.greetings?.[part] ?? [];
+  greeting = list.length
+    ? list[Math.floor(Math.random() * list.length)]
+    : `Good ${part}`;
+  return greeting;
 }
 
 function homeView() {
