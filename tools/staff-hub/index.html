@@ -14,7 +14,22 @@
   <link rel="stylesheet" href="../../shared/css/base.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="is-locked">
+  <!-- Sign-in screen. Shown until a CF staff session exists. This is the
+       curtain; the lock is Row Level Security in the database. -->
+  <div class="signin" id="signin">
+    <div class="signin-card">
+      <img src="../../shared/assets/brand/cf-logo-horizontal-black.png"
+        alt="Cornerstone Fellowship" width="210" height="41">
+      <h1 id="signin-title">Staff Hub</h1>
+      <p id="signin-msg">Checking your sign-in…</p>
+      <button type="button" class="btn signin-btn" id="signin-button" hidden>
+        <svg viewBox="0 0 21 21" aria-hidden="true"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+        <span id="signin-btn-label">Sign in with Microsoft</span>
+      </button>
+    </div>
+  </div>
+
   <a class="skip" href="#main">Skip to content</a>
 
   <aside class="side">
@@ -53,6 +68,7 @@
     <footer class="foot">
       <p id="contact"></p>
       <p id="health"></p>
+      <p id="me-line"></p>
     </footer>
   </div>
 

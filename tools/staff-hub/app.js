@@ -2,6 +2,7 @@ import { CONFIG } from "./config.js";
 import { CONTENT } from "./content.js";
 import { CAMPUSES } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
+import { getSession, isStaff, displayName, signIn, signOut, selectAll } from "../../shared/js/auth.js";
 
 const LIB = "../../shared/assets/brand/library/";
 const PHOTOS = "../../shared/assets/photos/";
@@ -628,7 +629,67 @@ function boot() {
   route();
 }
 
-boot();
+/* ================= sign-in ================= */
+// Protected cards live in Supabase (table hub_cards), readable only by signed-
+// in CF staff. They are merged into their sections after sign-in, so every
+// view, search included, treats them like any other card.
+function mergeProtectedCards(rows) {
+  for (const r of rows) {
+    const section = sections().find((s) => s.id === r.section_id);
+    if (!section) { console.warn("[hub] no section for card", r.section_id, r.title); continue; }
+    section.cards.push({
+      title: r.title, body: r.body ?? "", meta: r.meta ?? undefined,
+      owner: r.owner ?? undefined, reviewed: r.reviewed ?? null,
+      links: Array.isArray(r.links) ? r.links : [],
+    });
+  }
+}
+
+const initials = (name) => String(name).split(/[\s@.]+/).filter(Boolean).slice(0, 2)
+  .map((w) => w[0].toUpperCase()).join("") || "CF";
+
+function renderMe(session) {
+  const name = displayName(session);
+  $("avatar").textContent = initials(name);
+  $("me-name").textContent = name;
+  $("me-role").textContent = session.user.email ?? "";
+  $("me-line").innerHTML = `${esc(CONFIG.labels.signedInAs)} ${esc(session.user.email ?? name)} ·
+    <button type="button" class="linkish" id="sign-out">${esc(CONFIG.labels.signOut)}</button>`;
+  $("sign-out").addEventListener("click", () => signOut());
+}
+
+function showGate(message, buttonLabel, action) {
+  document.body.classList.add("is-locked");
+  $("signin").hidden = false;
+  $("signin-title").textContent = CONFIG.labels.gateTitle;
+  $("signin-msg").textContent = message;
+  const b = $("signin-button");
+  $("signin-btn-label").textContent = buttonLabel ?? CONFIG.labels.gateButton;
+  b.hidden = !action;
+  b.onclick = action ?? null;
+}
+
+async function start() {
+  let session = null;
+  try {
+    session = await getSession();
+  } catch (e) {
+    console.error("[hub] session check failed", e);
+    return showGate(CONFIG.labels.gateError);
+  }
+  if (!session) return showGate(CONFIG.labels.gateMsg, CONFIG.labels.gateButton, () => signIn());
+  if (!isStaff(session)) {
+    return showGate(CONFIG.labels.gateNotStaff(session.user.email ?? "That"),
+      CONFIG.labels.gateNotStaffButton, () => signOut());
+  }
+  mergeProtectedCards(await selectAll("hub_cards", "sort_order"));
+  $("signin").hidden = true;
+  document.body.classList.remove("is-locked");
+  renderMe(session);
+  boot();
+}
+
+start();
 
 // Going somewhere clears the filter. Without this, an active search keeps
 // winning over the route and destinations like #/admin never render.

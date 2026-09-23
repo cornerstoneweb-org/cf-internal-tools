@@ -515,3 +515,25 @@
   .swatch-hex { display: none; }
   .brand-lead { padding: var(--space-3); }
 }
+
+/* ---------- Sign-in gate ---------- */
+body.is-locked .side, body.is-locked .main, body.is-locked .skip { display: none; }
+.signin[hidden] { display: none; }
+.signin {
+  min-height: 100vh; min-height: 100dvh; width: 100%;
+  display: grid; place-items: center; padding: var(--space-4) 16px;
+  background: linear-gradient(160deg, var(--teal-wash), var(--bg) 55%);
+}
+.signin-card {
+  width: min(420px, 100%); text-align: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: var(--shadow); padding: var(--space-5) var(--space-4);
+}
+.signin-card img { height: 32px; width: auto; margin: 0 auto var(--space-4); display: block; }
+.signin-card h1 { font-size: 1.7rem; margin: 0; }
+.signin-card p { color: var(--slate); margin: var(--space-2) 0 var(--space-4); line-height: 1.5; }
+.signin-btn { display: inline-flex; align-items: center; gap: 10px; justify-content: center; width: 100%; padding: 12px 18px; font-size: .95rem; cursor: pointer; border: 0; }
+.signin-btn svg { width: 18px; height: 18px; flex: none; }
+.linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--teal-d); font-weight: 700; cursor: pointer; }
+.linkish:hover { text-decoration: underline; }
+.signin { position: fixed; inset: 0; z-index: 50; overflow-y: auto; min-height: 0; margin: 0; }

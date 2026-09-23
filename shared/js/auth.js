@@ -1,37 +1,60 @@
-// Auth for every tool. One module, one place to change when the identity
-// decision lands. See docs/auth.md — this is NOT resolved yet.
+// Auth for every tool: Sign in with Microsoft (Entra, CF tenant only)
+// through Supabase Auth. See docs/auth.md.
 //
-// Everything below is a placeholder shape, not a working implementation.
-// Do not ship a tool that reads real data against this file as written.
+// This file only decides what to SHOW. It is not the lock. The lock is Row
+// Level Security in the database (db/policies/): a browser that skips all of
+// this still gets nothing back.
 
 import { getClient } from "./supabase.js";
 
+export const STAFF_DOMAIN = "cornerstoneweb.org";
+
+// Resolves once any sign-in redirect (?code=...) has been processed.
 export async function getSession() {
   const supabase = await getClient();
   const { data } = await supabase.auth.getSession();
+  // Tidy the address bar after the Microsoft round trip.
+  if (new URLSearchParams(location.search).has("code")) {
+    history.replaceState(null, "", location.pathname + location.hash);
+  }
   return data.session ?? null;
 }
 
-export async function requireStaff() {
-  const session = await getSession();
-  if (!session) {
-    window.location.href = "/login.html?next=" + encodeURIComponent(location.pathname);
-    return null;
-  }
-  return session;
+export function isStaff(session) {
+  const email = session?.user?.email?.toLowerCase() ?? "";
+  return email.endsWith("@" + STAFF_DOMAIN);
 }
 
-// Roles come from the database, not from the client. A role read here is for
-// showing and hiding UI only. RLS is what actually enforces access.
-export async function getRoles() {
+export function displayName(session) {
+  const m = session?.user?.user_metadata ?? {};
+  return m.full_name || m.name || session?.user?.email || "Signed in";
+}
+
+export async function signIn() {
   const supabase = await getClient();
-  const { data, error } = await supabase.from("user_roles").select("role");
-  if (error) return [];
-  return data.map((r) => r.role);
+  await supabase.auth.signInWithOAuth({
+    provider: "azure",
+    options: {
+      scopes: "email",
+      // Come back to this exact page. Must match a Redirect URL in Supabase.
+      redirectTo: location.origin + location.pathname,
+    },
+  });
 }
 
 export async function signOut() {
   const supabase = await getClient();
   await supabase.auth.signOut();
-  window.location.href = "/";
+  location.replace(location.pathname);
+}
+
+// Reads that go through RLS. Returns [] on any error so a page never breaks
+// because the database said no.
+export async function selectAll(table, orderBy) {
+  const supabase = await getClient();
+  let q = supabase.from(table).select("*");
+  if (orderBy) q = q.order(orderBy);
+  const { data, error } = await q;
+  if (error) { console.warn(`[auth] ${table}:`, error.message); return []; }
+  return data ?? [];
 }

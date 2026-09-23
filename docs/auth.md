@@ -1,3 +1,27 @@
+# Auth: DECIDED (September 2026)
+
+**Sign in with Microsoft through Supabase Auth.** Site stays on GitHub Pages.
+
+- Entra app registration **CF Staff Hub**, single tenant (CF accounts only),
+  admin consent granted for User.Read, `email` optional claim on the ID token.
+  Client secret created with a 24-month expiry: renew it before it lapses or
+  staff sign-in stops working.
+- Supabase project `cf-internal-tools` (org `cornerstone-web`), Azure provider
+  on, Email provider OFF (no side door), redirect allow list limited to
+  `https://cornerstoneweb-org.github.io/cf-internal-tools/**`.
+- Protected content lives in Supabase, never in the repo. Table `hub_cards`,
+  readable only when `public.is_cf_staff()` is true (Azure provider AND a
+  cornerstoneweb.org email). Tested as anon, a non-CF account, a CF email
+  without Microsoft, and CF staff: only the last gets rows.
+- `shared/js/auth.js` decides what to SHOW. RLS is the lock.
+
+Local preview cannot sign in (localhost is not on the redirect allow list).
+Add `http://localhost:<port>/**` in Supabase URL Configuration if needed.
+
+---
+
+Original decision notes below, kept for history.
+
 # Auth: open decision
 
 Status: deliberately deferred, September 2026. Build on free accounts with

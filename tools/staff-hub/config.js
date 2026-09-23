@@ -46,6 +46,16 @@ export const CONFIG = {
   },
 
   labels: {
+    // Sign-in screen
+    gateTitle: "Staff Hub",
+    gateMsg: "Sign in with your Cornerstone Microsoft account to continue.",
+    gateButton: "Sign in with Microsoft",
+    gateNotStaff: (email) => `${email} isn't a Cornerstone staff account. Sign in with your @cornerstoneweb.org account.`,
+    gateNotStaffButton: "Use a different account",
+    gateError: "Something went wrong reaching the sign-in service. Refresh to try again.",
+    signedInAs: "Signed in as",
+    signOut: "Sign out",
+
     searchPlaceholder: "Search the hub, or ask where something lives",
     sectionSearchPlaceholder: (name) => `Search ${name.toLowerCase()}`,
     noResults: "Nothing matches that.",

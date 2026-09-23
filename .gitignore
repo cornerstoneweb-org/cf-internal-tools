@@ -10,7 +10,8 @@ Thumbs.db
 node_modules/
 npm-debug.log*
 
-# Secrets — never commit. Use env.example.js as the template.
+# Secrets: never commit. (config/supabase.config.js holds only PUBLIC values
+# and is committed on purpose.)
 shared/js/env.js
 .env
 .env.*
