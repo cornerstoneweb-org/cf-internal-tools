@@ -192,6 +192,14 @@ function cardsHTML(section, cards = section.cards) {
 // Picked once per visit so the greeting does not change while you click
 // around. Falls back to the plain greeting if a list is empty.
 let greeting = null;
+let firstName = "";   // set at sign-in from the Microsoft account
+
+// "Good morning, {name}" -> "Good morning, Ryan", or "Good morning" with no name.
+function withName(text) {
+  return firstName
+    ? text.replaceAll("{name}", firstName)
+    : text.replace(/,?\s*\{name\}/g, "");
+}
 function greetingText() {
   if (greeting) return greeting;
   const h = new Date().getHours();
@@ -212,8 +220,10 @@ function homeView() {
             style="object-position:${esc(photo.focus ?? "center")}" fetchpriority="high">` : ""}
          <div class="hero-text">
            <p class="hero-date">${esc(DATE_FMT.format(new Date()))}</p>
-           <h1>${esc(greetingText())}</h1>
-           <p class="hero-sub">${esc(CONFIG.labels.heroSub ?? CONFIG.labels.welcomeLede)}</p>
+           <h1>${esc(withName(greetingText()))}</h1>
+           <p class="hero-sub">${esc(firstName && !greetingText().includes("{name}") && CONFIG.labels.heroSubNamed
+             ? CONFIG.labels.heroSubNamed(firstName)
+             : (CONFIG.labels.heroSub ?? CONFIG.labels.welcomeLede))}</p>
          </div>
          ${photo?.place ? `<span class="hero-place">${esc(photo.place)}</span>` : ""}
        </section>`
@@ -648,7 +658,15 @@ function mergeProtectedCards(rows) {
 const initials = (name) => String(name).split(/[\s@.]+/).filter(Boolean).slice(0, 2)
   .map((w) => w[0].toUpperCase()).join("") || "CF";
 
+function firstNameOf(session) {
+  const m = session?.user?.user_metadata ?? {};
+  const full = m.given_name || m.full_name || m.name || "";
+  // Only use it if it looks like a real name, not an email address.
+  return full.includes("@") ? "" : full.trim().split(/\s+/)[0] ?? "";
+}
+
 function renderMe(session) {
+  firstName = firstNameOf(session);
   const name = displayName(session);
   $("avatar").textContent = initials(name);
   $("me-name").textContent = name;

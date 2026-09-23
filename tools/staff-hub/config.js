@@ -76,26 +76,29 @@ export const CONFIG = {
     welcomeLede: "We're so glad you're here.",
     welcomeBody: [],
     heroSub: "Welcome to the Staff Hub. We're so glad you're here.",
+    // Used when the greeting itself does not already say their name.
+    heroSubNamed: (name) => `Welcome to the Staff Hub, ${name}. We're so glad you're here.`,
 
     // The big greeting on Home. One is picked at random per visit from the
     // list for the time of day (morning before noon, afternoon until 5pm,
     // evening after). Add, cut or reword freely. Keep them short: they are
-    // the headline.
+    // the headline. {name} becomes the person's first name from their
+    // Microsoft account. If no name is available, ", {name}" is dropped.
     greetings: {
       morning: [
-        "Good morning",
+        "Good morning, {name}",
         "Rise and shine",
         "Fresh day, fresh start",
         "Morning, sunshine",
         "Hello, early bird",
         "Let's make it a good one",
-        "Welcome back, friend",
+        "Welcome back, {name}",
         "Top of the morning",
       ],
       afternoon: [
-        "Good afternoon",
+        "Good afternoon, {name}",
         "Coffee number two? No judgment",
-        "Afternoon, friend",
+        "Afternoon, {name}",
         "Hello, halfway point",
         "Snack o'clock",
         "Hang in there",
@@ -104,11 +107,11 @@ export const CONFIG = {
         "The afternoon stretch",
       ],
       evening: [
-        "Good evening",
+        "Good evening, {name}",
         "Thanks for all you did today",
         "Well done today",
         "Night owl mode: on",
-        "Evening, friend",
+        "Evening, {name}",
         "That's a wrap (almost)",
         "Look who's still here",
         "Well, hello there, night owl",
