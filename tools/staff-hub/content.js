@@ -193,11 +193,11 @@ export const CONTENT = {
       cards: [
         {
           title: "Staff Roster",
-          body: "Who does what around here.",
+          body: "Who does what around here. Chat, call or email anyone on staff.",
           owner: "Bou",
           reviewed: "2025-10-01", // from the old file name, Updated October 2025
           reviewEvery: 3,
-          links: [{ label: "Open the roster", url: null, status: "sharepoint" }],
+          links: [{ label: "Open the roster", url: "#/directory" }],
         },
         {
           title: "Pay Dates",
@@ -303,8 +303,12 @@ export const CONTENT = {
 
     {
       id: "directory",
-      accent: "var(--sec-guides)",
-      title: "Staff Directory",
+      accent: "var(--sec-hr)",
+      title: "Staff Roster",
+      // placement: "linked" = its own page, but no sidebar entry. Reached from
+      // the Staff Roster card on Human Resources. parent keeps HR highlighted.
+      placement: "linked",
+      parent: "hr",
       blurb: "Find anyone on staff and reach them in Teams.",
       enabled: true,
       // People are NOT listed here. They load from the locked staff_directory

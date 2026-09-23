@@ -585,3 +585,5 @@ body.is-locked .side, body.is-locked .main, body.is-locked .skip { display: none
   .dir-q { max-width: none; }
   .person-acts a { width: 40px; height: 40px; }
 }
+.back-link { display: inline-block; margin-bottom: var(--space-2); font-size: .85rem; font-weight: 700; color: var(--teal-d); text-decoration: none; }
+.back-link:hover { text-decoration: underline; }

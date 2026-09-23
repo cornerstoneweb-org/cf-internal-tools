@@ -119,7 +119,7 @@ const liveSections = () => sections().filter((s) => s.enabled);
 const onHome = (s) => s.placement === "home";
 const navSections = () =>
   sections()
-    .filter((s) => !onHome(s))
+    .filter((s) => !onHome(s) && s.placement !== "linked")
     .filter((s) => s.enabled || CONFIG.features.showDisabled)
     .sort((a, b) => Number(b.enabled) - Number(a.enabled));  // live first, parked last
 const allCards = () => liveSections().flatMap((s) => s.cards.map((c) => ({ card: c, section: s })));
@@ -436,7 +436,9 @@ function directoryView(section) {
       </span>
     </li>`;
   }).join("");
-  return `<div class="page-head has-accent" style="--sec:${ac(section)}">
+  const parent = section.parent ? sections().find((x) => x.id === section.parent) : null;
+  const back = parent ? `<a class="back-link" href="#/${esc(parent.id)}">← ${esc(parent.title)}</a>` : "";
+  return `${back}<div class="page-head has-accent" style="--sec:${ac(section)}">
       <div><h1 class="page-title">${esc(section.title)}</h1>
       <p class="page-sub">${esc(section.blurb)}</p></div>
     </div>
@@ -658,7 +660,7 @@ function route() {
   const found = sections().find((s) => s.id === id);
   // Parked sections are not reachable; neither are sections that live on Home.
   const section = found?.enabled && !onHome(found) ? found : null;
-  renderNav(section ? section.id : "home");
+  renderNav(section ? (section.parent ?? section.id) : "home");
   $("view").innerHTML = section
     ? (section.layout === "brand" ? brandView(section)
       : section.layout === "directory" ? directoryView(section)
