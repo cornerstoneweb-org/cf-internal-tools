@@ -3,6 +3,7 @@ import { CONTENT } from "./content.js";
 import { CAMPUSES } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
 import { getSession, isStaff, displayName, signIn, signOut, selectAll } from "../../shared/js/auth.js";
+import { watchForNewVersion } from "../../shared/js/version-check.js";
 
 const LIB = "../../shared/assets/brand/library/";
 const PHOTOS = "../../shared/assets/photos/";
@@ -807,6 +808,7 @@ async function start() {
   boot();
 }
 
+watchForNewVersion();
 start();
 
 // Going somewhere clears the filter. Without this, an active search keeps

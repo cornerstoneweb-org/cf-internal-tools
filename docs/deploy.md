@@ -47,3 +47,14 @@ Decide alongside docs/auth.md. These are the same decision wearing two hats.
 3. Push from GitHub Desktop.
 4. Settings, Pages, deploy from `main`, root.
 5. Flip a tool's `enabled` flag in `config/site.config.js` when it is ready.
+
+## Cache-busting (automatic)
+
+GitHub Pages lets browsers keep files for up to 10 minutes. A pre-commit hook
+(`.githooks/pre-commit`, enabled with `git config core.hooksPath .githooks`)
+runs `scripts/stamp-version.mjs` on every commit. It stamps a new version into
+each `tools/*/index.html` (an import map plus `?v=` on CSS and the entry script)
+and writes `version.json`. Open pages check `version.json` on load and when the
+tab regains focus, and reload once if a newer version is live.
+
+On a fresh clone, run `git config core.hooksPath .githooks` once. Needs Node.
