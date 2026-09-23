@@ -16,8 +16,8 @@ export const CONFIG = {
     quickActions: true,   // the circle-icon row on Home
     browse: false,        // section cards on Home. Off: the sidebar already
                           // lists every section, so these just repeated it.
-    greeting: false,      // "Good morning" instead of a fixed welcome. V1 is a
-                          // resource center, so the welcome reads better.
+    greeting: true,       // "Good morning" + date over a photo banner.
+                          // Off: the plain "Welcome to the Staff Hub" text.
     tiles: false,         // stat tiles. Off in V1: this is not a dashboard.
     homePanels: false,    // "Your tools" and "Needs attention" on Home. Same reason.
   },
@@ -64,12 +64,12 @@ export const CONFIG = {
     // site, but it should sound like the same church wrote it.
     welcomeTitle: "Welcome to the Staff Hub",
     welcomeLede: "We're so glad you're here.",
-    welcomeBody: [
-      "This is the one place for what you need to get your work done at Cornerstone. The links you use every day, the forms you fill out, the policies you look up twice a year, and the answers you'd otherwise have to go ask someone for.",
-      "If you can't find what you're looking for, come find me. And if you think of something that should live here but doesn't, tell me that too. This place gets better every time someone speaks up.",
-    ],
+    welcomeBody: [],
+    heroSub: "Welcome to the Staff Hub. We're so glad you're here.",
     quickHeading: "Quick links",
     valuesHeading: "How we work around here",
+    valuesLead: "We are",
+    valuesHint: "Tap one to read what it means.",
     browseHeading: "Browse",
     itemCount: (n) => `${n} item${n === 1 ? "" : "s"}`,
     toolsHeading: "Your tools",

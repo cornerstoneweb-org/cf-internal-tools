@@ -4,6 +4,7 @@ import { CAMPUSES } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
 
 const LIB = "../../shared/assets/brand/library/";
+const PHOTOS = "../../shared/assets/photos/";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -12,6 +13,79 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
 const DAY = 86400000;
 const MONTH_FMT = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
 const DATE_FMT = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+/* ================= staff values graphic ================= */
+// Line icons, 24px grid, drawn with currentColor so each value's color
+// carries through. Keyed by the card's `icon` field in content.js.
+const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const VALUE_ICONS = {
+  heart:   svg('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'),
+  talk:    svg('<path d="M4 5h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M19 9h1a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1v3l-4-3h-3"/>'),
+  flame:   svg('<path d="M12 21c-3.9 0-7-2.8-7-6.6 0-3.1 2.2-5.3 3.6-6.8.4 1.8 1.4 3 2.6 3.4C11 7.6 12.6 4.6 15 3c-.3 3 1.3 4.5 2.6 6 1 1.2 1.4 2.8 1.4 4.4 0 4.2-3.1 7.6-7 7.6z"/>'),
+  sunrise: svg('<path d="M4 18h16M7 18a5 5 0 0 1 10 0"/><path d="M12 5v3M5.6 9.6l2 2M18.4 9.6l-2 2M3 21h18"/>'),
+  sprout:  svg('<path d="M12 21v-9"/><path d="M12 12C12 8 9 6 5 6c0 4 3 6 7 6z"/><path d="M12 14c0-4 3-6 7-6 0 4-3 6-7 6z"/>'),
+};
+const valueWord = (title) => String(title ?? "").replace(/^we are\s+/i, "");
+const valueCards = () => sections().filter((s) => onHome(s) && s.enabled).flatMap((s) => s.cards);
+
+function openValue(i) {
+  const cards = valueCards();
+  if (!cards.length) return;
+  const n = (i + cards.length) % cards.length;
+  const c = cards[n];
+  const d = $("value-dialog");
+  d.style.setProperty("--v", c.accent ?? "var(--teal)");
+  d.dataset.index = n;
+  d.querySelector(".vd-ic").innerHTML = VALUE_ICONS[c.icon] ?? "";
+  d.querySelector(".vd-kicker").textContent = CONFIG.labels.valuesLead;
+  d.querySelector(".vd-title").textContent = valueWord(c.title);
+  d.querySelector(".vd-body").textContent = c.body ?? "";
+  const ref = d.querySelector(".vd-ref");
+  ref.textContent = c.meta ?? "";
+  ref.hidden = !c.meta;
+  d.querySelector(".vd-count").textContent = `${n + 1} of ${cards.length}`;
+  if (!d.open) d.showModal();
+}
+
+function wireValues() {
+  const d = document.createElement("dialog");
+  d.id = "value-dialog";
+  d.className = "vd";
+  d.setAttribute("aria-labelledby", "vd-title");
+  d.innerHTML = `
+    <div class="vd-card">
+      <button type="button" class="vd-x" data-vd="close" aria-label="Close">&times;</button>
+      <div class="vd-top">
+        <span class="vd-ic" aria-hidden="true"></span>
+        <p class="vd-kicker"></p>
+        <h2 class="vd-title" id="vd-title"></h2>
+      </div>
+      <p class="vd-body"></p>
+      <p class="vd-ref"></p>
+      <div class="vd-nav">
+        <button type="button" data-vd="prev" aria-label="Previous value">&larr;</button>
+        <span class="vd-count"></span>
+        <button type="button" data-vd="next" aria-label="Next value">&rarr;</button>
+      </div>
+    </div>`;
+  document.body.appendChild(d);
+
+  $("view").addEventListener("click", (e) => {
+    const b = e.target.closest(".hv-item");
+    if (b) openValue(Number(b.dataset.value));
+  });
+  d.addEventListener("click", (e) => {
+    const act = e.target.closest("[data-vd]")?.dataset.vd;
+    const i = Number(d.dataset.index);
+    if (act === "close" || e.target === d) d.close();
+    else if (act === "prev") openValue(i - 1);
+    else if (act === "next") openValue(i + 1);
+  });
+  d.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") openValue(Number(d.dataset.index) - 1);
+    if (e.key === "ArrowRight") openValue(Number(d.dataset.index) + 1);
+  });
+}
 
 /* ================= freshness ================= */
 // Pure, so it can be reasoned about and tested on its own.
@@ -120,9 +194,19 @@ function greetingText() {
 }
 
 function homeView() {
+  const photos = CONTENT.heroPhotos ?? [];
+  const photo = photos.length ? photos[Math.floor(Math.random() * photos.length)] : null;
   const head = CONFIG.features.greeting
-    ? `<h1 class="page-title">${esc(greetingText())}</h1>
-       <p class="page-sub">${esc(DATE_FMT.format(new Date()))}</p>`
+    ? `<section class="hero${photo ? " has-photo" : ""}">
+         ${photo ? `<img class="hero-img" src="${PHOTOS}${esc(photo.src)}" alt="${esc(photo.alt ?? "")}"
+            style="object-position:${esc(photo.focus ?? "center")}" fetchpriority="high">` : ""}
+         <div class="hero-text">
+           <p class="hero-date">${esc(DATE_FMT.format(new Date()))}</p>
+           <h1>${esc(greetingText())}</h1>
+           <p class="hero-sub">${esc(CONFIG.labels.heroSub ?? CONFIG.labels.welcomeLede)}</p>
+         </div>
+         ${photo?.place ? `<span class="hero-place">${esc(photo.place)}</span>` : ""}
+       </section>`
     : `<div class="welcome">
          <h1>${esc(CONFIG.labels.welcomeTitle)}</h1>
          <p class="welcome-lede">${esc(CONFIG.labels.welcomeLede)}</p>
@@ -146,13 +230,16 @@ function homeView() {
   const values = homeSections.map((s) => `
     <section class="home-values" style="--sec:${ac(s)}">
       <h2 class="block-head">${esc(CONFIG.labels.valuesHeading)}</h2>
-      <p class="home-values-sub">${esc(s.blurb)}</p>
-      <div class="value-list">${s.cards.map((c) => `
-        <div class="value">
-          <h3>${esc(c.title)}</h3>
-          <p>${esc(c.body)}</p>
-          ${c.meta ? `<p class="value-ref">${esc(c.meta)}</p>` : ""}
-        </div>`).join("")}</div>
+      <div class="hv">
+        <p class="hv-lead">${esc(CONFIG.labels.valuesLead)}</p>
+        <ul class="hv-row">${s.cards.map((c, i) => `
+          <li><button type="button" class="hv-item" data-value="${i}" style="--v:${esc(c.accent ?? "var(--teal)")}"
+              aria-haspopup="dialog" aria-label="${esc(c.title)}">
+            <span class="hv-ic" aria-hidden="true">${VALUE_ICONS[c.icon] ?? ""}</span>
+            <b>${esc(valueWord(c.title))}</b>
+          </button></li>`).join("")}</ul>
+        <p class="hv-hint">${esc(CONFIG.labels.valuesHint)}</p>
+      </div>
     </section>`).join("");
 
   const browse = CONFIG.features.browse
@@ -209,7 +296,8 @@ function homeView() {
     panels = `<div class="cols">${tools}${attention}</div>`;
   }
 
-  return `${head}${values}${quick}${browse}${tiles}${panels}`;
+  // Order: greeting, the four daily links, then the values.
+  return `${head}${quick}${values}${browse}${tiles}${panels}`;
 }
 
 function sectionView(section) {
@@ -527,6 +615,7 @@ function boot() {
   $("health").textContent = healthHTML();
   if (!CONFIG.features.search) $("search").closest(".search").hidden = true;
 
+  wireValues();
   route();
 }
 

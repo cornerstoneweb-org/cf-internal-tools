@@ -28,6 +28,13 @@
 export const CONTENT = {
   tagline: "Everything staff need, in one place.",
 
+  // Photos for the welcome banner on Home. One is picked at random on each
+  // visit. Files live in shared/assets/photos/ (web-sized, about 1800px wide).
+  //   place:  optional label shown in the corner, e.g. "Brentwood"
+  //   focus:  optional CSS object-position, to keep the subject in frame
+  // Empty = plain CF teal banner. Add photos here when good ones come in.
+  heroPhotos: [],
+
   contact: {
     name: "Ryan Bicker",
     email: "ryanb@cornerstoneweb.org",
@@ -308,31 +315,31 @@ export const CONTENT = {
       reviewEvery: 24,
       cards: [
         {
-          title: "We Are Healthy",
+          title: "We Are Healthy", accent: "var(--lime-d)", icon: "heart",
           body: "Live a balanced life that honors God by caring for your whole self: spiritually, physically, emotionally, mentally, financially, and within your family. Steward your body and life as God's temple, pursuing habits that reflect worship in all areas.",
           meta: "1 Corinthians 3:16-17, 4:5, 6:19-20, 10:31; 1 Timothy 4:8",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Honest",
+          title: "We Are Honest", accent: "var(--teal)", icon: "talk",
           body: "When differences arise, we go directly to each other for understanding, lead with grace and truth, talk with people not about them, and stay open and vulnerable.",
           meta: "Matthew 18; 1 Corinthians 4:4, 4:19-21, 6:1-11, 13:6; 2 Corinthians 7:8-16",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Hungry",
+          title: "We Are Hungry", accent: "var(--orange)", icon: "flame",
           body: "Work diligently with a mindset of perseverance and growth. Set goals, pursue excellence, and maintain a whatever-it-takes attitude marked by healthy competition and reliance on God's grace to accomplish what He has called you to.",
           meta: "1 Corinthians 4:11-13, 15:10",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Hopeful",
+          title: "We Are Hopeful", accent: "var(--sec-guides)", icon: "sunrise",
           body: "We trust where God is leading Cornerstone, believing the best, not assuming the worst. We stay open-handed, open to change, and act as owners, not renters.",
           meta: "1 Corinthians 13:7; 2 Corinthians 1:10-11, 13:11",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Humble",
+          title: "We Are Humble", accent: "var(--sec-values)", icon: "sprout",
           body: "We admit mistakes, celebrate teammates, listen well, and don't take ourselves too seriously. We seek God's promotion, not self-promotion.",
           meta: "1 Corinthians 4:6-7, 4:18-19, 13:4; 2 Corinthians 12:9",
           owner: "Chris", reviewed: null,

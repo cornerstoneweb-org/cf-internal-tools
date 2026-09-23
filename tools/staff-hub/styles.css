@@ -42,6 +42,32 @@
 }
 .page-title + .page-sub + .block-head { margin-top: var(--space-4); }
 
+/* ---------- Hero (greeting over a campus photo) ---------- */
+.hero {
+  position: relative; overflow: hidden; border-radius: 16px;
+  min-height: 260px; display: flex; align-items: flex-end;
+  background: linear-gradient(135deg, var(--teal-d), var(--teal));
+  box-shadow: var(--shadow);
+}
+.hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero.has-photo::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.62) 100%);
+}
+.hero-text { position: relative; z-index: 1; padding: var(--space-4); color: #fff; }
+.hero-date { margin: 0 0 4px; font-size: .88rem; font-weight: 700; opacity: .9; }
+.hero h1 { margin: 0; color: #fff; font-size: clamp(2rem, 5vw, 2.9rem); letter-spacing: -.025em; line-height: 1.05; }
+.hero-sub { margin: 8px 0 0; font-size: clamp(1rem, 2.2vw, 1.15rem); font-weight: 600; opacity: .95; }
+.hero h1, .hero-sub, .hero-date { text-shadow: 0 1px 12px rgba(0,0,0,.25); }
+.hero-place {
+  position: absolute; z-index: 1; top: 14px; right: 14px;
+  font-size: .72rem; font-weight: 700; color: #fff;
+  background: rgba(0,0,0,.35); backdrop-filter: blur(6px);
+  padding: 4px 10px; border-radius: 999px;
+}
+.hero + .quick-block { border-top: 0; padding-top: 0; }
+.hero:not(.has-photo) { min-height: 190px; }
+
 /* ---------- Announcement ---------- */
 .ann {
   display: flex; align-items: center; gap: var(--space-3);
@@ -61,19 +87,90 @@
 /* A convenience row under the welcome, not a feature. Horizontal, compact,
    no shadow, so it reads as secondary to the text above it. */
 /* ---------- Staff values, on Home ---------- */
-/* Not cards. Cards say "resource you go fetch"; these are the frame around
-   everything else, so they read as one band of writing with a rule down the
-   side of each. Two columns on desktop so five entries do not become a wall. */
-.home-values { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
-.home-values-sub { margin: -6px 0 var(--space-3); color: var(--faint); font-size: .84rem; }
-.value-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-3) var(--space-4); }
-.value { border-left: 3px solid var(--sec, var(--teal)); padding-left: 14px; }
-.value h3 {
-  font-size: .9rem; letter-spacing: .04em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--sec, var(--teal)) 52%, black);
+/* A graphic, not a wall of text. Five circles in CF colors, one per value,
+   joined by a soft line so they read as one set. Tapping one opens the full
+   wording and scripture in a dialog. */
+.home-values { margin-top: var(--space-5); }
+.hv {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg);
+  box-shadow: var(--shadow); padding: var(--space-4) var(--space-4) var(--space-3);
+  text-align: center; max-width: 900px;
 }
-.value p { margin: 5px 0 0; color: var(--slate); font-size: .86rem; line-height: 1.55; }
-.value-ref { color: var(--faint); font-size: .72rem; margin-top: 5px; }
+.hv-lead {
+  margin: 0 0 var(--space-3); font-size: 1.05rem; font-weight: 700; color: var(--slate);
+}
+.hv-row {
+  list-style: none; margin: 0; padding: 0; position: relative;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2);
+}
+.hv-row::before {
+  content: ""; position: absolute; left: 10%; right: 10%; top: 38px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--lime-d), var(--teal), var(--orange), #32B9DB, #04758F);
+  opacity: .22;
+}
+.hv-item {
+  position: relative; width: 100%; background: none; border: 0; padding: 0;
+  font: inherit; color: inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  border-radius: var(--r);
+}
+.hv-ic {
+  width: 76px; height: 76px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--v) 12%, white);
+  border: 2px solid var(--v);
+  color: color-mix(in srgb, var(--v) 60%, black);
+  transition: transform .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.hv-ic svg { width: 32px; height: 32px; }
+.hv-item b { font-size: .95rem; font-weight: 800; }
+.hv-item:hover .hv-ic, .hv-item:focus-visible .hv-ic {
+  transform: translateY(-3px);
+  background: var(--v); color: #fff;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--v) 30%, transparent);
+}
+.hv-item:focus-visible { outline: none; }
+.hv-item:focus-visible b { text-decoration: underline; text-underline-offset: 3px; }
+.hv-hint { margin: var(--space-3) 0 0; font-size: .78rem; color: var(--faint); }
+
+/* The value dialog */
+.vd {
+  border: 0; padding: 0; background: transparent; max-width: min(520px, calc(100vw - 32px)); width: 100%;
+}
+.vd::backdrop { background: rgba(10, 25, 35, .35); backdrop-filter: blur(3px); }
+.vd[open] .vd-card { animation: vd-in .22s ease-out; }
+@keyframes vd-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.vd-card {
+  position: relative; background: var(--card); border-radius: 16px; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,.18);
+  border-top: 6px solid var(--v);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+.vd-x {
+  position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; border-radius: 50%;
+  border: 0; background: var(--bg); color: var(--slate); font-size: 1.3rem; line-height: 1; cursor: pointer;
+}
+.vd-x:hover { background: var(--line); color: var(--ink); }
+.vd-top { text-align: center; }
+.vd-ic {
+  width: 64px; height: 64px; border-radius: 50%; margin: 0 auto var(--space-2);
+  display: grid; place-items: center; background: var(--v); color: #fff;
+}
+.vd-ic svg { width: 28px; height: 28px; }
+.vd-kicker { margin: 0; font-size: .85rem; font-weight: 700; color: var(--faint); }
+.vd-title { margin: 0; font-size: 1.9rem; letter-spacing: -.02em; color: color-mix(in srgb, var(--v) 55%, black); }
+.vd-body { margin: var(--space-3) 0 0; font-size: 1rem; line-height: 1.65; color: var(--ink); }
+.vd-ref { margin: var(--space-2) 0 0; font-size: .8rem; color: var(--faint); }
+.vd-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line);
+}
+.vd-nav button {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--card); color: var(--slate); font-size: 1.1rem; cursor: pointer;
+}
+.vd-nav button:hover { border-color: var(--v); color: var(--ink); }
+.vd-count { font-size: .8rem; color: var(--faint); }
 
 .quick-block { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line); }
 .quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--space-2); max-width: 900px; }
@@ -273,13 +370,23 @@
   .quick-ic { width: 28px; height: 28px; font-size: 13px; }
   .quick-item b { font-size: .78rem; }
   .quick-note { display: none; }
-  .home-values { margin-top: var(--space-4); padding-top: var(--space-3); }
-  .value-list { grid-template-columns: 1fr; gap: var(--space-3); }
-  .value { padding-left: 12px; }
-  .value h3 { font-size: .84rem; }
-  .value p { font-size: .84rem; }
+  .home-values { margin-top: var(--space-4); }
+  .hv { padding: var(--space-3) 10px; }
+  .hv-lead { font-size: .95rem; margin-bottom: 12px; }
+  .hv-row { gap: 2px; }
+  .hv-row::before { top: 26px; }
+  .hv-ic { width: 52px; height: 52px; }
+  .hv-ic svg { width: 24px; height: 24px; }
+  .hv-item { gap: 7px; }
+  .hv-item b { font-size: .74rem; }
+  .vd-card { padding: var(--space-4) var(--space-3) var(--space-3); }
+  .vd-title { font-size: 1.6rem; }
+  .vd-body { font-size: .95rem; }
   .quick-block { margin-top: var(--space-4); padding-top: var(--space-3); }
   .welcome { padding-top: var(--space-2); }
+  .hero { min-height: 210px; border-radius: 14px; }
+  .hero:not(.has-photo) { min-height: 160px; }
+  .hero-text { padding: var(--space-3); }
   .welcome h1::after { margin-top: var(--space-2); width: 52px; height: 4px; }
   .welcome p:not(.welcome-lede) { font-size: .92rem; }
 
