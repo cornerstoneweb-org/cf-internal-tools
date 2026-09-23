@@ -35,7 +35,8 @@ export async function signIn() {
   await supabase.auth.signInWithOAuth({
     provider: "azure",
     options: {
-      scopes: "email",
+      // "profile" is what makes Microsoft include the person's name.
+      scopes: "openid email profile",
       // Come back to this exact page. Must match a Redirect URL in Supabase.
       redirectTo: location.origin + location.pathname,
     },
