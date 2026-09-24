@@ -4,40 +4,40 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- version:start (written by scripts/stamp-version.mjs, do not edit) -->
-  <meta name="app-version" content="20260923035306">
+  <meta name="app-version" content="20260924053530">
   <script type="importmap">{
     "imports": {
-      "../../config/site.config.js": "../../config/site.config.js?v=20260923035306",
-      "../../config/supabase.config.js": "../../config/supabase.config.js?v=20260923035306",
-      "../../shared/js/auth.js": "../../shared/js/auth.js?v=20260923035306",
-      "../../shared/js/data.js": "../../shared/js/data.js?v=20260923035306",
-      "../../shared/js/home.js": "../../shared/js/home.js?v=20260923035306",
-      "../../shared/js/supabase.js": "../../shared/js/supabase.js?v=20260923035306",
-      "../../shared/js/ui.js": "../../shared/js/ui.js?v=20260923035306",
-      "../../shared/js/version-check.js": "../../shared/js/version-check.js?v=20260923035306",
-      "../comms/app.js": "../comms/app.js?v=20260923035306",
-      "../comms/config.js": "../comms/config.js?v=20260923035306",
-      "../facilities/app.js": "../facilities/app.js?v=20260923035306",
-      "../facilities/config.js": "../facilities/config.js?v=20260923035306",
-      "../it/app.js": "../it/app.js?v=20260923035306",
-      "../it/config.js": "../it/config.js?v=20260923035306",
-      "./app.js": "./app.js?v=20260923035306",
-      "./brand-library.js": "./brand-library.js?v=20260923035306",
-      "./config.js": "./config.js?v=20260923035306",
-      "./content.js": "./content.js?v=20260923035306"
+      "../../config/site.config.js": "../../config/site.config.js?v=20260924053530",
+      "../../config/supabase.config.js": "../../config/supabase.config.js?v=20260924053530",
+      "../../shared/js/auth.js": "../../shared/js/auth.js?v=20260924053530",
+      "../../shared/js/data.js": "../../shared/js/data.js?v=20260924053530",
+      "../../shared/js/home.js": "../../shared/js/home.js?v=20260924053530",
+      "../../shared/js/supabase.js": "../../shared/js/supabase.js?v=20260924053530",
+      "../../shared/js/ui.js": "../../shared/js/ui.js?v=20260924053530",
+      "../../shared/js/version-check.js": "../../shared/js/version-check.js?v=20260924053530",
+      "../comms/app.js": "../comms/app.js?v=20260924053530",
+      "../comms/config.js": "../comms/config.js?v=20260924053530",
+      "../facilities/app.js": "../facilities/app.js?v=20260924053530",
+      "../facilities/config.js": "../facilities/config.js?v=20260924053530",
+      "../it/app.js": "../it/app.js?v=20260924053530",
+      "../it/config.js": "../it/config.js?v=20260924053530",
+      "./app.js": "./app.js?v=20260924053530",
+      "./brand-library.js": "./brand-library.js?v=20260924053530",
+      "./config.js": "./config.js?v=20260924053530",
+      "./content.js": "./content.js?v=20260924053530"
     }
   }</script>
   <!-- version:end -->
   <title>Staff Hub | Cornerstone Fellowship</title>
-  <meta name="theme-color" content="#F5F7F8">
+  <meta name="theme-color" content="#F5F5F7">
   <link rel="icon" href="../../shared/assets/brand/cf-icon-black.png">
   <link rel="apple-touch-icon" href="../../shared/assets/brand/favicon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap">
-  <link rel="stylesheet" href="../../shared/css/tokens.css?v=20260923035306">
-  <link rel="stylesheet" href="../../shared/css/base.css?v=20260923035306">
-  <link rel="stylesheet" href="styles.css?v=20260923035306">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="../../shared/css/tokens.css?v=20260924053530">
+  <link rel="stylesheet" href="../../shared/css/base.css?v=20260924053530">
+  <link rel="stylesheet" href="styles.css?v=20260924053530">
 </head>
 <body class="is-locked">
   <!-- Sign-in screen. Shown until a CF staff session exists. This is the
@@ -57,34 +57,41 @@
 
   <a class="skip" href="#main">Skip to content</a>
 
-  <aside class="side">
-    <div class="side-brand">
-      <a href="#/home"><img src="../../shared/assets/brand/cf-logo-horizontal-black.png"
+  <header class="gnav" id="gnav">
+    <div class="gnav-in">
+      <a class="gnav-brand" href="#/home"><img src="../../shared/assets/brand/cf-logo-horizontal-black.png"
         alt="Cornerstone Fellowship" width="210" height="41"></a>
+      <nav class="gnav-links" id="nav" aria-label="Sections"></nav>
+      <div class="gnav-right">
+        <button type="button" class="icon-btn" id="search-open" aria-label="Search the hub" aria-expanded="false" aria-controls="gsearch">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.9"/><path d="M13.5 13.5 18 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </button>
+        <a class="btn gnav-cta" id="primary-action" href="#/requests">New request</a>
+        <div class="me">
+          <button type="button" class="avatar" id="avatar" aria-haspopup="true" aria-expanded="false" aria-controls="me-menu" aria-label="Your account">CF</button>
+          <div class="me-menu" id="me-menu" hidden>
+            <b id="me-name">Cornerstone Staff</b><span id="me-role">Staff Hub</span>
+            <hr><button type="button" id="menu-sign-out">Sign out</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <nav class="side-nav" id="nav" aria-label="Sections"></nav>
-    <div class="side-me">
-      <div class="avatar" id="avatar">CF</div>
-      <div><b id="me-name">Cornerstone Staff</b><span id="me-role">Staff Hub</span></div>
+    <div class="gsearch" id="gsearch">
+      <div class="gsearch-in">
+        <div class="search">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
+            <path d="M13.5 13.5 18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="search" id="search" autocomplete="off" spellcheck="false" aria-label="Search the hub">
+          <kbd id="kbd" aria-hidden="true">esc</kbd>
+          <button type="button" class="search-clear" id="clear" hidden aria-label="Clear search">&times;</button>
+        </div>
+      </div>
     </div>
-  </aside>
+  </header>
 
   <div class="main">
-    <header class="topbar">
-      <div class="search">
-        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="2"/>
-          <path d="M13.5 13.5 18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <input type="search" id="search" autocomplete="off" spellcheck="false" aria-label="Search the hub">
-        <kbd id="kbd" aria-hidden="true">/</kbd>
-        <button type="button" class="search-clear" id="clear" hidden aria-label="Clear search">&times;</button>
-      </div>
-      <div class="topbar-right">
-        <a class="btn" id="primary-action" href="#/requests">+ New request</a>
-      </div>
-    </header>
-
     <main class="content" id="main">
       <div id="announce"></div>
       <div id="view"></div>
@@ -97,6 +104,10 @@
     </footer>
   </div>
 
-  <script type="module" src="app.js?v=20260923035306"></script>
+  <!-- Phone only: section tabs along the bottom, iOS style. Built from
+       CONFIG.tabs in app.js. -->
+  <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
+
+  <script type="module" src="app.js?v=20260924053530"></script>
 </body>
 </html>

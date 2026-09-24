@@ -13,10 +13,11 @@ export const CONFIG = {
                           // staff the wrong story. It lives on /admin now.
     announcement: true,   // the banner
     healthLine: false,    // "n items need checking" in the footer. Same reason.
-    quickActions: true,   // the circle-icon row on Home
-    browse: false,        // section cards on Home. Off: the sidebar already
-                          // lists every section, so these just repeated it.
-    greeting: true,       // "Good morning" + date over a photo banner.
+    quickActions: true,   // the app-icon row on Home
+    browse: true,         // the tile grid of sections on Home. Back on with
+                          // the top nav (2026-09-23): the nav is a thin row of
+                          // words, the tiles say what each section is for.
+    greeting: true,       // "Good morning" + date on the dark hero.
                           // Off: the plain "Welcome to the Staff Hub" text.
     tiles: false,         // stat tiles. Off in V1: this is not a dashboard.
     homePanels: false,    // "Your tools" and "Needs attention" on Home. Same reason.
@@ -148,10 +149,16 @@ export const CONFIG = {
       ],
     },
     quickHeading: "Quick links",
-    valuesHeading: "How we work around here",
+    quickSub: "The places you go every day.",
+    heroSearch: "Search the hub, or ask where something lives",
+    browseSub: "Everything staff need, in one place.",
+    laterTitle: "Coming later",
+    laterBody: "More is on the way.",
+    searchLabel: "Search",
+    valuesHeading: "How we work around here.",
     valuesLead: "We are",
     valuesHint: "Tap one to read what it means.",
-    browseHeading: "Browse",
+    browseHeading: "Browse the hub",
     itemCount: (n) => `${n} item${n === 1 ? "" : "s"}`,
     toolsHeading: "Your tools",
     attentionHeading: "Needs attention",
@@ -177,6 +184,16 @@ export const CONFIG = {
     groupEmpty: "Sections with nothing in them",
     groupParked: "Parked for V2, content already written",
   },
+
+  // Phone tab bar, left to right. `id` is a section id (or "home");
+  // `search: true` opens search. Four or five is the most that fits.
+  tabs: [
+    { id: "home",      label: "Home",     icon: "home" },
+    { id: "requests",  label: "Requests", icon: "requests" },
+    { id: "hr",        label: "HR",       icon: "hr" },
+    { id: "directory", label: "Roster",   icon: "person" },
+    { search: true,    label: "Search",   icon: "search" },
+  ],
 
   // Home tiles. Every value is computed from real content, never typed in,
   // so nothing here can quietly go stale or be wrong.

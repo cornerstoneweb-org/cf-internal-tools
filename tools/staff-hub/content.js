@@ -102,14 +102,19 @@ export const CONTENT = {
     prompt: "Can't find something?",
   },
 
-  // The four things staff open every day. Kept short on purpose: this row is
-  // a convenience under the welcome, not the point of the page. Request forms
-  // live under Requests where people go looking for them.
+  // The things staff open every day, drawn as app icons on Home.
+  //   icon:   a key from QUICK_ICONS in app.js
+  //   accent: the tile color. ink: the icon color (default white). Use a
+  //           dark ink on lime, which is too light for a white icon.
+  //   url:    "#/..." stays in the hub; anything else opens a new tab.
+  // Request forms live under Requests where people go looking for them.
   quickActions: [
-    { glyph: "\u2709", label: "Email",    note: "Outlook",          accent: "var(--sec-software)", url: "https://outlook.office.com/" },
-    { glyph: "\u25C8", label: "Teams",    note: "Chat and calls",   accent: "var(--sec-guides)",   url: "https://teams.microsoft.com/v2/" },
-    { glyph: "\u2317", label: "Central",  note: "CCB",              accent: "var(--sec-values)",   url: "https://cornerstonefellowship.ccbchurch.com/goto/login" },
-    { glyph: "\u25F7", label: "OnePoint", note: "Pay and time off", accent: "var(--sec-hr)",       url: "https://secure.onehcm.com/ta/CFLCA.login?rnd=QSZ&NoRedirect=1" },
+    { icon: "mail",   label: "Email",    note: "Outlook",          accent: "var(--teal)",   url: "https://outlook.office.com/" },
+    { icon: "chat",   label: "Teams",    note: "Chat and calls",   accent: "var(--cyan)",   url: "https://teams.microsoft.com/v2/" },
+    { icon: "people", label: "Central",  note: "CCB",              accent: "var(--jungle)", ink: "var(--lime)", url: "https://cornerstonefellowship.ccbchurch.com/goto/login" },
+    { icon: "clock",  label: "OnePoint", note: "Pay and time off", accent: "var(--orange)", url: "https://secure.onehcm.com/ta/CFLCA.login?rnd=QSZ&NoRedirect=1" },
+    { icon: "doc",    label: "Handbook", note: "Search it",        accent: "var(--lime)",   ink: "var(--jungle)", url: "#/handbook" },
+    { icon: "person", label: "Roster",   note: "Staff directory",  accent: "#FFFFFF",       ink: "var(--teal)",   url: "#/directory" },
   ],
 
   // Set to null when there is nothing to announce.
@@ -126,7 +131,7 @@ export const CONTENT = {
 
   sections: [
     {
-      id: "requests",
+      id: "requests", icon: "requests",
       accent: "var(--sec-requests)",
       title: "Requests",
       blurb: "Ask another team for something.",
@@ -175,7 +180,7 @@ export const CONTENT = {
     },
 
     {
-      id: "software",
+      id: "software", icon: "grid",
       accent: "var(--sec-software)",
       title: "Software",
       blurb: "The programs we use to get work done.",
@@ -244,7 +249,7 @@ export const CONTENT = {
     },
 
     {
-      id: "hr",
+      id: "hr", icon: "hr",
       accent: "var(--sec-hr)",
       title: "Human Resources",
       blurb: "Pay, time off, policies and paperwork.",
@@ -316,7 +321,7 @@ export const CONTENT = {
     },
 
     {
-      id: "brand",
+      id: "brand", icon: "layers",
       accent: "var(--sec-brand)",
       title: "Brand",
       blurb: "Logos, colors, and how to use them.",
@@ -439,31 +444,31 @@ export const CONTENT = {
       reviewEvery: 24,
       cards: [
         {
-          title: "We Are Healthy", accent: "var(--lime-d)", icon: "heart",
+          title: "We Are Healthy", short: "Caring for your whole self, as worship.", accent: "var(--lime-d)", icon: "heart",
           body: "Live a balanced life that honors God by caring for your whole self: spiritually, physically, emotionally, mentally, financially, and within your family. Steward your body and life as God's temple, pursuing habits that reflect worship in all areas.",
           meta: "1 Corinthians 3:16-17, 4:5, 6:19-20, 10:31; 1 Timothy 4:8",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Honest", accent: "var(--teal)", icon: "talk",
+          title: "We Are Honest", short: "Talk with people, not about them.", accent: "var(--teal)", icon: "talk",
           body: "When differences arise, we go directly to each other for understanding, lead with grace and truth, talk with people not about them, and stay open and vulnerable.",
           meta: "Matthew 18; 1 Corinthians 4:4, 4:19-21, 6:1-11, 13:6; 2 Corinthians 7:8-16",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Hungry", accent: "var(--orange)", icon: "flame",
+          title: "We Are Hungry", short: "A whatever-it-takes attitude.", accent: "var(--orange)", icon: "flame",
           body: "Work diligently with a mindset of perseverance and growth. Set goals, pursue excellence, and maintain a whatever-it-takes attitude marked by healthy competition and reliance on God's grace to accomplish what He has called you to.",
           meta: "1 Corinthians 4:11-13, 15:10",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Hopeful", accent: "var(--sec-guides)", icon: "sunrise",
+          title: "We Are Hopeful", short: "Owners, not renters.", accent: "var(--sec-guides)", icon: "sunrise",
           body: "We trust where God is leading Cornerstone, believing the best, not assuming the worst. We stay open-handed, open to change, and act as owners, not renters.",
           meta: "1 Corinthians 13:7; 2 Corinthians 1:10-11, 13:11",
           owner: "Chris", reviewed: null,
         },
         {
-          title: "We Are Humble", accent: "var(--sec-values)", icon: "sprout",
+          title: "We Are Humble", short: "God's promotion, not self-promotion.", accent: "var(--sec-values)", icon: "sprout",
           body: "We admit mistakes, celebrate teammates, listen well, and don't take ourselves too seriously. We seek God's promotion, not self-promotion.",
           meta: "1 Corinthians 4:6-7, 4:18-19, 13:4; 2 Corinthians 12:9",
           owner: "Chris", reviewed: null,
@@ -471,10 +476,10 @@ export const CONTENT = {
       ],
     },
 
-    { id: "resources", accent: "var(--sec-default)", title: "Resources", blurb: "Coming in a future release.", enabled: false, layout: "compact", cards: [] },
-    { id: "tutorials", accent: "var(--sec-default)", title: "Tutorials", blurb: "Coming in a future release.", enabled: false, layout: "compact", cards: [] },
+    { id: "resources", icon: "book", accent: "var(--sec-default)", title: "Resources", blurb: "Coming in a future release.", enabled: false, layout: "compact", cards: [] },
+    { id: "tutorials", icon: "play", accent: "var(--sec-default)", title: "Tutorials", blurb: "Coming in a future release.", enabled: false, layout: "compact", cards: [] },
     {
-      id: "guides",
+      id: "guides", icon: "book",
       accent: "var(--sec-guides)",
       title: "Reference Guides",
       blurb: "How to do the things that come up.",

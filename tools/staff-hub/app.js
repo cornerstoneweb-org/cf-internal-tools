@@ -27,6 +27,27 @@ const VALUE_ICONS = {
   sunrise: svg('<path d="M4 18h16M7 18a5 5 0 0 1 10 0"/><path d="M12 5v3M5.6 9.6l2 2M18.4 9.6l-2 2M3 21h18"/>'),
   sprout:  svg('<path d="M12 21v-9"/><path d="M12 12C12 8 9 6 5 6c0 4 3 6 7 6z"/><path d="M12 14c0-4 3-6 7-6 0 4-3 6-7 6z"/>'),
 };
+// App-icon and section glyphs, same 24px line style. Keyed by `icon` in
+// content.js (quick links and sections) and CONFIG.tabs.
+const ICONS = {
+  mail:     svg('<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>'),
+  chat:     svg('<path d="M4 5h16v11H9l-5 4z"/>'),
+  people:   svg('<circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5M15 14.2c2.6-.3 4.9 1 5.5 4"/>'),
+  clock:    svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/>'),
+  doc:      svg('<rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/>'),
+  person:   svg('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-4 3.6-6 7-6s6.2 2 7 6"/>'),
+  requests: svg('<path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v5M9.5 10.5h5"/>'),
+  grid:     svg('<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>'),
+  hr:       svg('<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/>'),
+  layers:   svg('<path d="M12 3 3 8l9 5 9-5z"/><path d="m3 13 9 5 9-5"/>'),
+  book:     svg('<path d="M4 5.5C6.5 4 9.5 4 12 6c2.5-2 5.5-2 8-.5V19c-2.5-1.5-5.5-1.5-8 .5-2.5-2-5.5-2-8-.5z"/><path d="M12 6v13.5"/>'),
+  play:     svg('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/>'),
+  home:     svg('<path d="M4 10.5 12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>'),
+  search:   svg('<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>'),
+  chevron:  svg('<path d="m9 6 6 6-6 6"/>'),
+};
+const isInternal = (url) => String(url ?? "").startsWith("#");
+
 const valueWord = (title) => String(title ?? "").replace(/^we are\s+/i, "");
 const valueCards = () => sections().filter((s) => onHome(s) && s.enabled).flatMap((s) => s.cards);
 
@@ -222,6 +243,11 @@ function greetingText() {
 function homeView() {
   const photos = CONTENT.heroPhotos ?? [];
   const photo = photos.length ? photos[Math.floor(Math.random() * photos.length)] : null;
+  const L = CONFIG.labels;
+  const sub = firstName && !greetingText().includes("{name}") && L.heroSubNamed
+    ? L.heroSubNamed(firstName) : (L.heroSub ?? L.welcomeLede);
+  // The dark hero: date, a big greeting, and a Spotlight-style search button
+  // that opens the real search in the nav.
   const head = CONFIG.features.greeting
     ? `<section class="hero${photo ? " has-photo" : ""}">
          ${photo ? `<img class="hero-img" src="${PHOTOS}${esc(photo.src)}" alt="${esc(photo.alt ?? "")}"
@@ -229,64 +255,88 @@ function homeView() {
          <div class="hero-text">
            <p class="hero-date">${esc(DATE_FMT.format(new Date()))}</p>
            <h1>${esc(withName(greetingText()))}</h1>
-           <p class="hero-sub">${esc(firstName && !greetingText().includes("{name}") && CONFIG.labels.heroSubNamed
-             ? CONFIG.labels.heroSubNamed(firstName)
-             : (CONFIG.labels.heroSub ?? CONFIG.labels.welcomeLede))}</p>
+           <p class="hero-sub">${esc(sub)}</p>
+           ${CONFIG.features.search ? `<button type="button" class="spot" data-open-search>
+             ${ICONS.search}<span>${esc(L.heroSearch ?? L.searchPlaceholder)}</span><kbd>/</kbd>
+           </button>` : ""}
          </div>
-         ${photo?.place ? `<span class="hero-place">${esc(photo.place)}</span>` : ""}
+         ${photo?.place ? `<span class="hero-place">${esc(photo.place)}</span>`
+           : `<img class="hero-mark" src="../../shared/assets/brand/cf-icon-white.png" alt="" aria-hidden="true">`}
        </section>`
     : `<div class="welcome">
-         <h1>${esc(CONFIG.labels.welcomeTitle)}</h1>
-         <p class="welcome-lede">${esc(CONFIG.labels.welcomeLede)}</p>
-         ${(CONFIG.labels.welcomeBody ?? []).map((para) => `<p>${esc(para)}</p>`).join("")}
+         <h1>${esc(L.welcomeTitle)}</h1>
+         <p class="welcome-lede">${esc(L.welcomeLede)}</p>
+         ${(L.welcomeBody ?? []).map((para) => `<p>${esc(para)}</p>`).join("")}
        </div>`;
 
-  const quick = CONFIG.features.quickActions && CONTENT.quickActions?.length
-    ? `<div class="quick-block">
-         <h2 class="block-head">${esc(CONFIG.labels.quickHeading)}</h2>
-         <div class="quick">${CONTENT.quickActions.map((a) => `
-           <a class="quick-item" href="${esc(a.url)}" target="_blank" rel="noopener" style="--sec:${esc(a.accent ?? "var(--sec-default)")}">
-             <span class="quick-ic" aria-hidden="true">${esc(a.glyph)}</span>
-             <span class="quick-text"><b>${esc(a.label)}</b><span class="quick-note">${esc(a.note ?? "")}</span></span>
-           </a>`).join("")}</div>
-       </div>` : "";
+  const blockHead = (title, subText) => `<div class="sec-head"><h2>${esc(title)}</h2>${subText ? `<p>${esc(subText)}</p>` : ""}</div>`;
 
-  // Staff values live here rather than on a page of their own. They are not
-  // a resource you go look up; they are the frame around everything else on
-  // the hub, so they sit with the welcome.
+  // Quick links as app icons.
+  const quick = CONFIG.features.quickActions && CONTENT.quickActions?.length
+    ? `<section class="quick-block">
+         ${blockHead(L.quickHeading, L.quickSub)}
+         <div class="apps">${CONTENT.quickActions.map((a) => {
+           const out = isInternal(a.url) ? "" : ' target="_blank" rel="noopener"';
+           return `<a class="app" href="${esc(a.url)}"${out} style="--tile:${esc(a.accent ?? "var(--teal)")};--glyph:${esc(a.ink ?? "#fff")}">
+             <span class="app-ic" aria-hidden="true">${ICONS[a.icon] ?? ""}</span>
+             <b>${esc(a.label)}</b><span class="app-note">${esc(a.note ?? "")}</span>
+           </a>`;
+         }).join("")}</div>
+       </section>` : "";
+
+  // Sections as a tile grid. The first live section gets the big tile and
+  // lists what is inside it; the rest get a tile each; parked sections share
+  // one quiet "coming later" tile.
+  let browse = "";
+  if (CONFIG.features.browse) {
+    const live = navSections().filter((s) => s.enabled);
+    const parked = CONFIG.features.showDisabled ? navSections().filter((s) => !s.enabled) : [];
+    const [lead, ...rest] = live;
+    const tile = (s) => `<a class="bt" href="#/${esc(s.id)}" style="--sec:${ac(s)}">
+        <span class="bt-ic" aria-hidden="true">${ICONS[s.icon] ?? ICONS.grid}</span>
+        <span class="bt-tag">${esc(s.title)}</span>
+        <h3>${esc(s.blurb)}</h3>
+        <span class="bt-go">${esc(L.open)}</span>
+      </a>`;
+    const leadTile = lead ? `<div class="bt bt-lead" style="--sec:${ac(lead)}">
+        <a class="bt-lead-head" href="#/${esc(lead.id)}">
+          <span class="bt-tag">${esc(lead.title)}</span>
+          <h3>${esc(lead.blurb)}</h3>
+        </a>
+        <ul class="bt-list">${lead.cards.map((c) => {
+          const live = (c.links ?? []).find((l) => linkStatus(l) === "ok");
+          if (!live) return `<li><span class="bt-row is-off">${esc(c.title)}<span class="pill pill-soon">${esc(L.comingSoon)}</span></span></li>`;
+          const out = isInternal(live.url) ? "" : ' target="_blank" rel="noopener"';
+          return `<li><a class="bt-row" href="${esc(live.url)}"${out}>${esc(c.title)}${ICONS.chevron}</a></li>`;
+        }).join("")}</ul>
+      </div>` : "";
+    const later = parked.length ? `<div class="bt bt-later" aria-disabled="true">
+        <span class="bt-ic" aria-hidden="true">${ICONS.book}</span>
+        <span class="bt-tag">${esc(L.laterTitle)}</span>
+        <h3>${esc(parked.map((s) => s.title).join(", "))}</h3>
+        <span class="bt-go">${esc(L.comingSoon)}</span>
+      </div>` : "";
+    browse = `<section class="browse-block">
+        ${blockHead(L.browseHeading, L.browseSub)}
+        <div class="bento">${leadTile}${rest.map(tile).join("")}${later}</div>
+      </section>`;
+  }
+
+  // Staff values as five color cards. Tapping one opens the full wording
+  // and scripture in a dialog.
   const homeSections = sections().filter((s) => onHome(s) && s.enabled);
   const values = homeSections.map((s) => `
     <section class="home-values" style="--sec:${ac(s)}">
-      <h2 class="block-head">${esc(CONFIG.labels.valuesHeading)}</h2>
-      <div class="hv">
-        <p class="hv-lead">${esc(CONFIG.labels.valuesLead)}</p>
-        <ul class="hv-row">${s.cards.map((c, i) => `
-          <li><button type="button" class="hv-item" data-value="${i}" style="--v:${esc(c.accent ?? "var(--teal)")}"
-              aria-haspopup="dialog" aria-label="${esc(c.title)}">
-            <span class="hv-ic" aria-hidden="true">${VALUE_ICONS[c.icon] ?? ""}</span>
-            <b>${esc(valueWord(c.title))}</b>
-          </button></li>`).join("")}</ul>
-        <p class="hv-hint">${esc(CONFIG.labels.valuesHint)}</p>
-      </div>
+      ${blockHead(L.valuesHeading, L.valuesHint)}
+      <ul class="hv-row">${s.cards.map((c, i) => `
+        <li><button type="button" class="hv-item" data-value="${i}" style="--v:${esc(c.accent ?? "var(--teal)")}"
+            aria-haspopup="dialog" aria-label="${esc(c.title)}">
+          <span class="hv-ic" aria-hidden="true">${VALUE_ICONS[c.icon] ?? ""}</span>
+          <small>${esc(L.valuesLead)}</small>
+          <b>${esc(valueWord(c.title))}.</b>
+          ${c.short ? `<i>${esc(c.short)}</i>` : ""}
+        </button></li>`).join("")}</ul>
     </section>`).join("");
-
-  const browse = CONFIG.features.browse
-    ? `<h2 class="block-head">${esc(CONFIG.labels.browseHeading)}</h2>
-       <div class="browse">${navSections().map((s) => {
-         const n = s.cards.length;
-         if (!s.enabled) {
-           return `<div class="browse-item is-off" aria-disabled="true">
-             <b>${esc(s.title)}</b>
-             <span>${esc(s.blurb)}</span>
-             <em>${esc(CONFIG.labels.comingSoon)}</em>
-           </div>`;
-         }
-         return `<a class="browse-item" href="#/${esc(s.id)}" style="--sec:${ac(s)}">
-           <b>${esc(s.title)}</b>
-           <span>${esc(s.blurb)}</span>
-           <em>${esc(CONFIG.labels.itemCount(n))}</em>
-         </a>`;
-       }).join("")}</div>` : "";
 
   const tiles = CONFIG.features.tiles
     ? `<div class="tiles">${CONFIG.tiles.map((k) => {
@@ -324,8 +374,8 @@ function homeView() {
     panels = `<div class="cols">${tools}${attention}</div>`;
   }
 
-  // Order: greeting, the four daily links, then the values.
-  return `${head}${quick}${values}${browse}${tiles}${panels}`;
+  // Order: greeting, daily links, sections, then the values.
+  return `${head}${quick}${browse}${values}${tiles}${panels}`;
 }
 
 function sectionView(section) {
@@ -878,20 +928,50 @@ function announcementHTML() {
 
 /* ================= shell ================= */
 function renderNav(active) {
-  const items = [`<a href="#/home"${active === "home" ? ' class="is-active"' : ""}><i class="dot"></i>Home</a>`];
-  let labelled = false;
-  for (const s of navSections()) {
-    if (!s.enabled && !labelled) { items.push(`<div class="side-label">Coming soon</div>`); labelled = true; }
-    if (!s.enabled) {
-      // Parked sections are shown so staff know they are coming, but they do
-      // not go anywhere, so they are not links.
-      items.push(`<span class="nav-parked"><i class="dot"></i>${esc(s.title)}</span>`);
-      continue;
-    }
+  // Top nav: Home plus every live section. Parked sections are not listed
+  // here; they show on Home in the "Coming later" tile.
+  const items = [`<a href="#/home"${active === "home" ? ' class="is-active"' : ""}>Home</a>`];
+  for (const s of navSections().filter((x) => x.enabled)) {
     const cls = active === s.id ? ' class="is-active"' : "";
-    items.push(`<a href="#/${esc(s.id)}"${cls} style="--sec:${ac(s)}"><i class="dot"></i>${esc(s.title)}</a>`);
+    items.push(`<a href="#/${esc(s.id)}"${cls} style="--sec:${ac(s)}"${active === s.id ? ' aria-current="page"' : ""}>${esc(s.title)}</a>`);
   }
   $("nav").innerHTML = items.join("");
+  renderTabs(active);
+}
+
+// Phone tab bar. A tab is active for its own page and for pages filed under
+// it (Pay Dates lights up HR), unless that page has a tab of its own.
+function renderTabs(active) {
+  const bar = $("tabbar");
+  if (!bar) return;
+  const hash = (location.hash.replace(/^#\/?/, "") || "home").toLowerCase().split("/")[0];
+  const tabIds = (CONFIG.tabs ?? []).map((t) => t.id).filter(Boolean);
+  const current = tabIds.includes(hash) ? hash : active;
+  const searching = document.body.classList.contains("search-open");
+  bar.innerHTML = (CONFIG.tabs ?? []).map((t) => {
+    if (t.search) {
+      return `<button type="button" data-open-search class="${searching ? "is-active" : ""}">${ICONS[t.icon] ?? ""}${esc(t.label)}</button>`;
+    }
+    const on = !searching && current === t.id;
+    return `<a href="#/${esc(t.id)}"${on ? ' class="is-active" aria-current="page"' : ""}>${ICONS[t.icon] ?? ""}${esc(t.label)}</a>`;
+  }).join("");
+}
+
+/* ================= search panel ================= */
+// Search drops out of the nav bar like Spotlight. Opening it focuses the box;
+// closing it clears the box and puts the page back.
+function openSearch() {
+  if (!CONFIG.features.search) return;
+  document.body.classList.add("search-open");
+  $("search-open").setAttribute("aria-expanded", "true");
+  renderTabs(null);
+  $("search").focus();
+}
+function closeSearch() {
+  document.body.classList.remove("search-open");
+  $("search-open").setAttribute("aria-expanded", "false");
+  if ($("search").value) { $("search").value = ""; $("clear").hidden = true; }
+  route();
 }
 
 function healthHTML() {
@@ -996,7 +1076,7 @@ function boot() {
   const c = CONTENT.contact;
   $("contact").innerHTML = `${esc(c.prompt)} <a href="mailto:${esc(c.email)}">${esc(c.name)}</a>`;
   $("health").textContent = healthHTML();
-  if (!CONFIG.features.search) $("search").closest(".search").hidden = true;
+  if (!CONFIG.features.search) $("search-open").hidden = true;
 
   wireValues();
   route();
@@ -1037,6 +1117,7 @@ function renderMe(session) {
   $("me-line").innerHTML = `${esc(CONFIG.labels.signedInAs)} ${esc(session.user.email ?? name)} ·
     <button type="button" class="linkish" id="sign-out">${esc(CONFIG.labels.signOut)}</button>`;
   $("sign-out").addEventListener("click", () => signOut());
+  $("menu-sign-out").onclick = () => signOut();
 }
 
 function showGate(message, buttonLabel, action) {
@@ -1086,15 +1167,42 @@ async function start() {
 watchForNewVersion();
 start();
 
-// Going somewhere clears the filter. Without this, an active search keeps
-// winning over the route and destinations like #/admin never render.
+// Going somewhere clears the filter and closes search. Without this, an
+// active search keeps winning over the route and destinations like #/admin
+// never render.
 window.addEventListener("hashchange", () => {
   if ($("search").value) { $("search").value = ""; $("clear").hidden = true; }
+  document.body.classList.remove("search-open");
+  $("search-open").setAttribute("aria-expanded", "false");
+  closeMenu();
   route();
+  window.scrollTo(0, 0);
 });
 $("search").addEventListener("input", () => { $("clear").hidden = !$("search").value; route(); });
 $("clear").addEventListener("click", () => { $("search").value = ""; $("clear").hidden = true; route(); $("search").focus(); });
+$("search-open").addEventListener("click", () =>
+  document.body.classList.contains("search-open") ? closeSearch() : openSearch());
+// Anything marked data-open-search (the hero button, the Search tab) opens it.
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-open-search]")) { e.preventDefault(); openSearch(); }
+  if (!e.target.closest(".me")) closeMenu();
+});
 document.addEventListener("keydown", (e) => {
-  if (e.key === "/" && document.activeElement !== $("search")) { e.preventDefault(); $("search").focus(); }
-  if (e.key === "Escape" && document.activeElement === $("search")) { $("search").value = ""; $("clear").hidden = true; route(); }
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? "");
+  if ((e.key === "/" && !typing) || (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey))) {
+    e.preventDefault(); openSearch();
+  }
+  if (e.key === "Escape" && document.body.classList.contains("search-open")) closeSearch();
+  if (e.key === "Escape") closeMenu();
+});
+
+/* ================= account menu ================= */
+function closeMenu() {
+  $("me-menu").hidden = true;
+  $("avatar").setAttribute("aria-expanded", "false");
+}
+$("avatar").addEventListener("click", () => {
+  const open = $("me-menu").hidden;
+  $("me-menu").hidden = !open;
+  $("avatar").setAttribute("aria-expanded", String(open));
 });
