@@ -51,7 +51,9 @@
 .hero-date { margin: 0 0 14px; font-size: .9rem; font-weight: 600; letter-spacing: .01em; color: var(--cyan); }
 .hero.has-photo .hero-date { color: #fff; opacity: .9; }
 .hero h1 { margin: 0; color: #fff; font-size: clamp(2.5rem, 6.4vw, 4.25rem); letter-spacing: -.04em; line-height: 1.02; max-width: 14ch; }
-.hero-sub { margin: 16px 0 0; font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: rgba(255,255,255,.72); letter-spacing: -.012em; max-width: 36ch; line-height: 1.4; }
+/* One line when it fits (same width as the search bar), two balanced
+   lines when it does not. */
+.hero-sub { margin: 16px 0 0; font-size: clamp(1.05rem, 2.2vw, 1.3rem); color: rgba(255,255,255,.72); letter-spacing: -.012em; max-width: 620px; line-height: 1.4; text-wrap: balance; }
 .hero-mark { position: absolute; right: 64px; bottom: 52px; width: 120px; opacity: .14; pointer-events: none; }
 .hero-place {
   position: absolute; z-index: 1; top: 16px; right: 16px;
