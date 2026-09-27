@@ -17,7 +17,7 @@ export const CONFIG = {
     browse: true,         // the tile grid of sections on Home. Back on with
                           // the top nav (2026-09-23): the nav is a thin row of
                           // words, the tiles say what each section is for.
-    greeting: true,       // "Good morning" + date on the dark hero.
+    greeting: true,       // "Hi, Ryan" + date on the dark hero.
                           // Off: the plain "Welcome to the Staff Hub" text.
     tiles: false,         // stat tiles. Off in V1: this is not a dashboard.
     homePanels: false,    // "Your tools" and "Needs attention" on Home. Same reason.
@@ -110,44 +110,16 @@ export const CONFIG = {
     // Used when the greeting itself does not already say their name.
     heroSubNamed: (name) => `Welcome to the Staff Hub, ${name}. We're so glad you're here.`,
 
-    // The big greeting on Home. One is picked at random per visit from the
-    // list for the time of day (morning before noon, afternoon until 5pm,
-    // evening after). Add, cut or reword freely. Keep them short: they are
-    // the headline. {name} becomes the person's first name from their
-    // Microsoft account. If no name is available, ", {name}" is dropped.
-    greetings: {
-      morning: [
-        "Good morning, {name}",
-        "Rise and shine",
-        "Fresh day, fresh start",
-        "Morning, sunshine",
-        "Hello, early bird",
-        "Let's make it a good one",
-        "Welcome back, {name}",
-        "Top of the morning",
-      ],
-      afternoon: [
-        "Good afternoon, {name}",
-        "Coffee number two? No judgment",
-        "Afternoon, {name}",
-        "Hello, halfway point",
-        "Snack o'clock",
-        "Hang in there",
-        "Look at you, still crushing it",
-        "Hope your day's been a good one",
-        "The afternoon stretch",
-      ],
-      evening: [
-        "Good evening, {name}",
-        "Thanks for all you did today",
-        "Well done today",
-        "Night owl mode: on",
-        "Evening, {name}",
-        "That's a wrap (almost)",
-        "Look who's still here",
-        "Well, hello there, night owl",
-      ],
-    },
+    // The big greeting on Home. One is picked at random per visit. Every
+    // line should include {name}, which becomes the person's first name from
+    // their Microsoft account. If no name is available, ", {name}" is
+    // dropped, so each line must still read fine without it.
+    greetings: [
+      "Hi, {name}",
+      "Hello, {name}",
+      "Hey there, {name}",
+      "Good to see you, {name}",
+    ],
     quickHeading: "Quick links",
     quickSub: "The places you go every day.",
     heroSearch: "Search the hub, or ask where something lives",

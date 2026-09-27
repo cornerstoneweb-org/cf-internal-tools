@@ -219,11 +219,11 @@ function cardsHTML(section, cards = section.cards) {
 
 /* ================= views ================= */
 // Picked once per visit so the greeting does not change while you click
-// around. Falls back to the plain greeting if a list is empty.
+// around. Falls back to "Hello, {name}" if the list is empty.
 let greeting = null;
 let firstName = "";   // set at sign-in from the Microsoft account
 
-// "Good morning, {name}" -> "Good morning, Ryan", or "Good morning" with no name.
+// "Hi, {name}" -> "Hi, Ryan", or "Hi" with no name.
 function withName(text) {
   return firstName
     ? text.replaceAll("{name}", firstName)
@@ -231,12 +231,10 @@ function withName(text) {
 }
 function greetingText() {
   if (greeting) return greeting;
-  const h = new Date().getHours();
-  const part = h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
-  const list = CONFIG.labels.greetings?.[part] ?? [];
+  const list = CONFIG.labels.greetings ?? [];
   greeting = list.length
     ? list[Math.floor(Math.random() * list.length)]
-    : `Good ${part}`;
+    : "Hello, {name}";
   return greeting;
 }
 

@@ -52,7 +52,7 @@ The dashboard pieces are built but switched off in `config.js`:
 |---|---|---|
 | `browse` | off | section cards on Home. Removed: the sidebar already lists every section. |
 | `quickActions` | on | the circle-icon row |
-| `greeting` | off | "Good morning" instead of the fixed welcome |
+| `greeting` | off | A rotating "Hi, {name}" greeting instead of the fixed welcome |
 | `tiles` | off | the four computed stat tiles |
 | `homePanels` | off | "Your tools" and "Needs attention" |
 
