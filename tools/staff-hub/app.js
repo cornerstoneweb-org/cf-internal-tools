@@ -254,13 +254,15 @@ function homeView() {
            <p class="hero-date">${esc(DATE_FMT.format(new Date()))}</p>
            <h1>${esc(withName(greetingText()))}</h1>
            <p class="hero-sub">${esc(sub)}</p>
-           ${CONFIG.features.search ? `<button type="button" class="spot" data-open-search>
-             ${ICONS.search}<span>${esc(L.heroSearch ?? L.searchPlaceholder)}</span><kbd>/</kbd>
-           </button>` : ""}
+           ${CONFIG.features.search ? `<label class="spot">
+             ${ICONS.search}<input type="search" id="hero-q" autocomplete="off" spellcheck="false"
+               placeholder="${esc(L.heroSearch ?? L.searchPlaceholder)}" aria-label="Search the hub"><kbd>/</kbd>
+           </label>` : ""}
          </div>
          ${photo?.place ? `<span class="hero-place">${esc(photo.place)}</span>`
            : `<img class="hero-mark" src="../../shared/assets/brand/cf-icon-white.png" alt="" aria-hidden="true">`}
-       </section>`
+       </section>
+       <div class="hero-results" id="hero-results" aria-live="polite"></div>`
     : `<div class="welcome">
          <h1>${esc(L.welcomeTitle)}</h1>
          <p class="welcome-lede">${esc(L.welcomeLede)}</p>
@@ -960,6 +962,14 @@ function renderTabs(active) {
 // closing it clears the box and puts the page back.
 function openSearch() {
   if (!CONFIG.features.search) return;
+  // On Home the hero has a real search box, so use it instead of dropping
+  // the nav panel. Results show right under the hero.
+  const hero = $("hero-q");
+  if (hero && !document.body.classList.contains("search-open")) {
+    hero.focus();
+    hero.scrollIntoView({ block: "center", behavior: "smooth" });
+    return;
+  }
   document.body.classList.add("search-open");
   $("search-open").setAttribute("aria-expanded", "true");
   renderTabs(null);
@@ -979,6 +989,7 @@ function healthHTML() {
 }
 
 function route() {
+  $("view").classList.remove("hero-searching");
   const q = $("search").value.trim().toLowerCase();
   if (q) {
     renderNav(null);
@@ -1180,7 +1191,22 @@ $("search").addEventListener("input", () => { $("clear").hidden = !$("search").v
 $("clear").addEventListener("click", () => { $("search").value = ""; $("clear").hidden = true; route(); $("search").focus(); });
 $("search-open").addEventListener("click", () =>
   document.body.classList.contains("search-open") ? closeSearch() : openSearch());
-// Anything marked data-open-search (the hero button, the Search tab) opens it.
+// The hero search box on Home. Results render under the hero and the rest
+// of Home steps aside until the box is cleared.
+function heroSearch(value) {
+  const q = value.trim().toLowerCase();
+  $("view").classList.toggle("hero-searching", !!q);
+  $("hero-results").innerHTML = q ? searchView(q) : "";
+}
+document.addEventListener("input", (e) => {
+  if (e.target.id === "hero-q") heroSearch(e.target.value);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.target.id === "hero-q" && e.key === "Escape") {
+    e.target.value = ""; heroSearch(""); e.target.blur();
+  }
+});
+// Anything marked data-open-search (the Search tab) opens it.
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-open-search]")) { e.preventDefault(); openSearch(); }
   if (!e.target.closest(".me")) closeMenu();

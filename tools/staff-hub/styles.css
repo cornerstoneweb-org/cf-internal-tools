@@ -61,7 +61,7 @@
   background: rgba(0,0,0,.35); backdrop-filter: blur(8px);
   padding: 4px 11px; border-radius: 999px;
 }
-/* Spotlight-style button. It opens the real search in the nav. */
+/* The hero search box on Home. A real input; results render under the hero. */
 .spot {
   margin-top: 36px; width: 100%; max-width: 620px; height: 54px;
   display: flex; align-items: center; gap: 12px; padding: 0 18px;
@@ -72,6 +72,18 @@
   transition: background .2s var(--ease), border-color .2s var(--ease);
 }
 .spot:hover { background: rgba(255,255,255,.17); border-color: rgba(255,255,255,.28); }
+.spot:focus-within { background: rgba(255,255,255,.17); border-color: rgba(255,255,255,.4); }
+.spot input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: none;
+  font: inherit; color: #fff; letter-spacing: -.01em;
+}
+.spot input::placeholder { color: rgba(255,255,255,.66); }
+.spot input::-webkit-search-cancel-button { display: none; }
+.spot:focus-within kbd { display: none; }
+/* Hero search results: shown under the hero while the rest of Home steps aside. */
+.hero-results:empty { display: none; }
+.hero-results { margin-top: 40px; }
+#view.hero-searching > :not(.hero):not(.hero-results) { display: none; }
 .spot svg { width: 19px; height: 19px; flex: none; }
 .spot span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .spot kbd {
@@ -348,6 +360,7 @@ a.bt-row:hover svg { transform: translateX(3px); color: currentColor; }
   .hero-mark { display: none; }
   .spot { margin-top: 26px; height: 48px; font-size: .95rem; }
   .spot kbd { display: none; }
+  .spot input { font-size: 16px; }   /* 16px stops iOS zooming on focus */
 
   .apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 8px; }
   .app { width: auto; }
