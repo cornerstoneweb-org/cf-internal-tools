@@ -31,3 +31,13 @@ Graphics/
 brand-assets/
 *.psd
 *.eps
+
+# Privacy: raw data and documents about people never live in this repo.
+# Source workbooks stay in OneDrive. See docs/privacy.md.
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.tsv
+*.docx
+*.doc

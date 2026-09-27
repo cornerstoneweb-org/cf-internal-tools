@@ -15,20 +15,11 @@ honestly:
 Staff Hub is the clearest custom case so far: it aggregates, and Microsoft
 handles that badly. Facilities and IT intake are the least clear.
 
-## Free phase rule, until the leadership demo lands
+## Privacy
 
-Placeholder data only. No real staff names, emails, phone numbers, extensions
-or submissions in any file in this repo, including files that are not yet
-committed.
-
-GitHub Pages stays off. The site runs locally with `node scripts/serve.mjs`
-for building and for demoing.
-
-The reason: a public Pages site cannot be un-published, and anything committed
-to git stays in history even after the file is deleted. Both are permanent in
-a way that upgrading a plan later does not undo.
-
-This rule lifts when hosting and auth are decided, not before.
+`docs/privacy.md` is the rulebook for what can live where. Read it before
+adding data, a table or a file. The pre-commit check enforces the parts a
+script can catch.
 
 ## Code
 
