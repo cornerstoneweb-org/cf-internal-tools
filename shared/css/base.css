@@ -215,3 +215,14 @@ body:not(.search-open) .gsearch { display: none; }
 .tool-card h2 { font-size: 1.1rem; margin-bottom: var(--space-1); }
 .tool-card p { margin: 0; color: var(--slate); font-size: .9rem; }
 .tool-card .owner { display: block; margin-top: var(--space-2); font-size: .75rem; color: var(--faint); font-weight: 600; }
+
+/* Toasts (shared/js/ui.js toast()). Sits above the phone tab bar. */
+.cf-toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 300;
+  transform: translateX(-50%); max-width: calc(100% - 32px);
+  background: var(--jungle); color: #fff; padding: 12px 18px; border-radius: 14px;
+  box-shadow: var(--shadow-up); font-weight: 600; font-size: .92rem;
+  animation: cf-toast-in .25s var(--ease);
+}
+@keyframes cf-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+@media (max-width: 720px) { .cf-toast { bottom: calc(84px + env(safe-area-inset-bottom)); } }

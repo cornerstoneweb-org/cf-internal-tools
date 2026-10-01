@@ -4,6 +4,8 @@ import { CAMPUSES } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
 import { getSession, isStaff, displayName, userMeta, signIn, signOut, selectAll } from "../../shared/js/auth.js";
 import { watchForNewVersion } from "../../shared/js/version-check.js";
+import { toast } from "../../shared/js/ui.js";
+import { mountFacilities } from "../facilities/facilities.js";
 
 const LIB = "../../shared/assets/brand/library/";
 const PHOTOS = "../../shared/assets/photos/";
@@ -1005,6 +1007,16 @@ function route() {
     $("search").placeholder = CONFIG.labels.searchPlaceholder;
     document.title = "Admin · Staff Hub";
     wireGate();
+    return;
+  }
+
+  // Facilities Requests is its own tool (tools/facilities/) drawn inside the
+  // hub so it shares the nav and the Microsoft sign-in. It owns everything
+  // after #/facilities.
+  if (id === "facilities") {
+    renderNav("requests");
+    $("search").placeholder = CONFIG.labels.searchPlaceholder;
+    mountFacilities($("view"), { userName: firstName, toast });
     return;
   }
 

@@ -1,9 +1,4 @@
-import { CONFIG } from "./config.js";
-import { renderHeader } from "../../shared/js/ui.js";
-// import { requireStaff } from "../../shared/js/auth.js";
-
-renderHeader(document.getElementById("header"), { current: CONFIG.id });
-
-// await requireStaff();  // enable once docs/auth.md is resolved
-
-document.getElementById("app").innerHTML = `<p>${CONFIG.emptyState}</p>`;
+// Facilities Requests is drawn inside the Staff Hub (see facilities.js) so it
+// shares the hub's nav and Microsoft sign-in. Anyone landing on this folder
+// is sent there.
+location.replace("../staff-hub/#/facilities" + location.hash.replace(/^#\/?facilities/, ""));

@@ -171,10 +171,11 @@ export const CONTENT = {
         },
         {
           title: "Facilities",
-          body: "Room setup, repairs, building issues.",
+          body: "Repairs, building issues, keys and access.",
           owner: "Joe",
           reviewed: null,
-          links: [{ label: "Start a request", url: null, status: "pending" }],
+          // Points at the Facilities mockup (demo data) while Ryan and Joe review it.
+          links: [{ label: "Start a request", url: "#/facilities" }],
         },
       ],
     },
