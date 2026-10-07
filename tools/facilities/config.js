@@ -11,6 +11,10 @@ export const CONFIG = {
   owner: "Joe",
 
   demo: true,   // shows the demo bar and uses demo data
+  demoHomeCampus: "livermore",  // mockup stand-in for the signed-in person's campus
+
+  // Feature switches. Approvals are built but off for v1 (tracking only).
+  features: { approvals: false },
 
   // Who works requests. First names only in the repo; the real list will come
   // from Supabase once roles exist.
@@ -34,7 +38,8 @@ export const CONFIG = {
 
   types: [
     { id: "repair", label: "Repair or maintenance", blurb: "Something is broken, leaking, worn out or not working.", icon: "wrench" },
-    { id: "keys",   label: "Keys or access",        blurb: "A key, a door that won't lock, an access or alarm problem.", icon: "key" },
+    // Keys / access dropped from v1 (not requested often enough). The database still allows it.
+    // { id: "keys",   label: "Keys or access",        blurb: "A key, a door that won't lock, an access or alarm problem.", icon: "key" },
   ],
 
   // Three statuses on purpose. "Waiting on approval" is shown from the
@@ -71,6 +76,7 @@ export const CONFIG = {
     formTitle: "New facilities request",
     formType: "What kind of request?",
     formCampus: "Campus",
+    formCampusHint: "Your home campus is picked. Change it if the problem is somewhere else.",
     formLocation: "Where exactly?",
     formLocationHint: "Room, building or area. \"Kids wing, room 4\" is perfect.",
     formTitleLabel: "What's going on?",
@@ -90,7 +96,7 @@ export const CONFIG = {
     codesWarn: "Never type door codes or alarm codes into a request. Joe will handle those in person or by phone.",
     photoPrivacy: "In the real version, photos go to private storage only the facilities team and you can see.",
 
-    sent: (id) => `Request #${id} sent. Joe got a Teams message.`,
+    sent: (id) => `Request #${id} sent. The facilities team got a Teams message.`,
 
     tileOpen: "Open",
     tileOpenN: "New plus in progress",

@@ -67,6 +67,10 @@ function save() {
 
 /* ================= helpers ================= */
 const campuses = () => CAMPUSES.filter((c) => !CONFIG.campusExclude.includes(c.id));
+// Home campus pre-selects on the form. Real version: the signed-in person's
+// campus_code from staff_directory. Mockup: CONFIG.demoHomeCampus.
+const homeCampus = () => ctxHomeCampus ?? (CONFIG.demo ? CONFIG.demoHomeCampus : null);
+let ctxHomeCampus = null;
 const campusName = (id) => CAMPUSES.find((c) => c.id === id)?.name ?? id;
 const statusOf = (id) => CONFIG.statuses.find((s) => s.id === id) ?? CONFIG.statuses[0];
 const priOf = (id) => CONFIG.priorities.find((p) => p.id === id) ?? CONFIG.priorities[1];
@@ -111,7 +115,8 @@ const DAY_ONLY = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "sh
 function visible(r) {
   return seesAll() || r.requester.id === "me";
 }
-const pendingApprovals = () => state.requests.filter((r) => r.approval?.state === "pending");
+const approvalsOn = () => CONFIG.features?.approvals === true;
+const pendingApprovals = () => !approvalsOn() ? [] : state.requests.filter((r) => r.approval?.state === "pending");
 
 function statusPill(r) {
   const s = statusOf(r.status);
@@ -122,7 +127,7 @@ function priPill(r) {
   return `<span class="fx-pill fx-pri-pill fx-pri-${p.id}">${esc(p.label)}</span>`;
 }
 function approvalTag(r) {
-  if (!r.approval) return "";
+  if (!approvalsOn() || !r.approval) return "";
   if (r.approval.state === "pending") return `<span class="fx-pill fx-ap-pending">Needs approval</span>`;
   if (r.approval.state === "approved") return `<span class="fx-pill fx-ap-ok">Approved</span>`;
   return `<span class="fx-pill fx-ap-no">Declined</span>`;
@@ -156,7 +161,7 @@ function tabsHTML(page) {
   const open = state.requests.filter(isOpen).length;
   const tabs = [];
   if (seesAll()) tabs.push({ id: "queue", label: L.tabQueue, n: open });
-  if (isRyan()) tabs.push({ id: "approvals", label: L.tabApprovals, n: pendingApprovals().length, hot: true });
+  if (isRyan() && approvalsOn()) tabs.push({ id: "approvals", label: L.tabApprovals, n: pendingApprovals().length, hot: true });
   tabs.push({ id: "mine", label: L.tabMine, n: mine });
   return `<nav class="fx-tabs" aria-label="Facilities pages">${tabs.map((t) =>
     `<a href="${BASE}/${t.id}" class="${page === t.id ? "is-on" : ""}"${page === t.id ? ' aria-current="page"' : ""}>${esc(t.label)}${t.n ? ` <span class="fx-count${t.hot ? " is-hot" : ""}">${t.n}</span>` : ""}</a>`).join("")}</nav>`;
@@ -251,7 +256,7 @@ function queueView() {
       ${tile(L.tileOpen, open.length, L.tileOpenN)}
       ${tile(L.tileEmergency, emergency, L.tileEmergencyN, true)}
       ${tile(L.tileOld, old, L.tileOldN, true)}
-      ${tile(L.tileApproval, waiting, L.tileApprovalN)}
+      ${approvalsOn() ? tile(L.tileApproval, waiting, L.tileApprovalN) : ""}
     </div>
     <div class="fx-queue">
       <div class="fx-queue-main">
@@ -318,7 +323,8 @@ function newView() {
       <input type="radio" name="type" value="${esc(t.id)}"${i === 0 ? " checked" : ""}>
       <span class="fx-pick-in"><span class="fx-pick-ic">${IC[t.icon]}</span><b>${esc(t.label)}</b><span>${esc(t.blurb)}</span></span>
     </label>`).join("");
-  const camp = campuses().map((c) => `<label class="fx-chip-radio"><input type="radio" name="campus" value="${esc(c.id)}" required><span>${esc(c.name)}</span></label>`).join("");
+  const home = homeCampus();
+  const camp = campuses().map((c) => `<label class="fx-chip-radio"><input type="radio" name="campus" value="${esc(c.id)}"${c.id === home ? " checked" : ""} required><span>${esc(c.name)}</span></label>`).join("");
   const pri = CONFIG.priorities.map((p) => `<label class="fx-pri-opt fx-pri-${p.id}">
       <input type="radio" name="priority" value="${esc(p.id)}"${p.id === "week" ? " checked" : ""}>
       <span><b><i class="fx-dot fx-pri-${p.id}"></i>${esc(p.label)}</b><span>${esc(p.blurb)}</span></span>
@@ -328,9 +334,15 @@ function newView() {
       <div><h1 class="page-title">${esc(L.formTitle)}</h1></div>
     </div>
     <form class="fx-form" id="fx-form" novalidate>
-      <fieldset class="fx-field"><legend>${esc(L.formType)}</legend><div class="fx-picks">${types}</div></fieldset>
+      ${CONFIG.types.length > 1 ? `<fieldset class="fx-field"><legend>${esc(L.formType)}</legend><div class="fx-picks">${types}</div></fieldset>` : `<input type="hidden" name="type" value="${esc(CONFIG.types[0].id)}">`}
+
+      <label class="fx-field"><span class="fx-label">${esc(L.formTitleLabel)}</span>
+        <input class="fx-input" name="title" maxlength="90" required>
+        <span class="fx-hint">${esc(L.formTitleHint)}</span>
+        <span class="fx-err" data-err="title" hidden>Add a short summary.</span></label>
 
       <fieldset class="fx-field"><legend>${esc(L.formCampus)}</legend><div class="fx-chips">${camp}</div>
+        ${home ? `<p class="fx-hint">${esc(L.formCampusHint)}</p>` : ""}
         <p class="fx-err" data-err="campus" hidden>Pick a campus.</p></fieldset>
 
       <label class="fx-field"><span class="fx-label">${esc(L.formLocation)}</span>
@@ -338,22 +350,7 @@ function newView() {
         <span class="fx-hint">${esc(L.formLocationHint)}</span>
         <span class="fx-err" data-err="location" hidden>Tell Joe where to go.</span></label>
 
-      <label class="fx-field"><span class="fx-label">${esc(L.formTitleLabel)}</span>
-        <input class="fx-input" name="title" maxlength="90" required>
-        <span class="fx-hint">${esc(L.formTitleHint)}</span>
-        <span class="fx-err" data-err="title" hidden>Add a short summary.</span></label>
 
-      <div class="fx-keys" data-for="keys" hidden>
-        <p class="fx-warn fx-warn-codes">${IC.lock}<span>${esc(L.codesWarn)}</span></p>
-        <div class="fx-two">
-          <label class="fx-field"><span class="fx-label">${esc(L.formKeysWho)}</span>
-            <input class="fx-input" name="keysWho" maxlength="80"><span class="fx-hint">${esc(L.formKeysWhoHint)}</span></label>
-          <label class="fx-field"><span class="fx-label">${esc(L.formNeedBy)}</span>
-            <input class="fx-input" type="date" name="needBy"></label>
-        </div>
-        <label class="fx-field"><span class="fx-label">${esc(L.formKeysWhere)}</span>
-          <input class="fx-input" name="keysWhere" maxlength="120"></label>
-      </div>
 
       <label class="fx-field"><span class="fx-label">${esc(L.formDetails)}</span>
         <textarea class="fx-input" name="details" rows="4" maxlength="2000"></textarea>
@@ -405,7 +402,7 @@ function shrink(file) {
 function submitForm(form) {
   const fd = new FormData(form);
   const v = (k) => String(fd.get(k) ?? "").trim();
-  const missing = ["campus", "location", "title"].filter((k) => !v(k));
+  const missing = ["title", "campus", "location"].filter((k) => !v(k));
   form.querySelectorAll("[data-err]").forEach((el) => { el.hidden = !missing.includes(el.dataset.err); });
   if (missing.length) {
     form.querySelector(`[data-err="${missing[0]}"]`)?.closest(".fx-field")?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -426,7 +423,8 @@ function submitForm(form) {
       { at: now, by: "system", kind: "teams", to: "joe", text: priority === "emergency" ? "New emergency request" : "New request" },
     ],
   };
-  if (type === "keys") req.keys = { who: v("keysWho"), where: v("keysWhere"), needBy: v("needBy") || null };
+  if (type === "keys") req.keys = // keys type is off in v1 (CONFIG.types)
+    { who: v("keysWho"), where: v("keysWhere"), needBy: v("needBy") || null };
   state.requests.push(req);
   state.draftPhotos = [];
   save();
@@ -456,6 +454,7 @@ function timelineHTML(r) {
 }
 
 function approvalBanner(r) {
+  if (!approvalsOn()) return "";
   const a = r.approval;
   if (!a) return "";
   if (a.state === "pending") return `<p class="fx-banner fx-ap-pending">${esc(L.approvalPending(a.amount))}</p>`;
@@ -464,7 +463,7 @@ function approvalBanner(r) {
 }
 
 function managePanel(r) {
-  if (isRyan() && r.approval?.state === "pending") {
+  if (approvalsOn() && isRyan() && r.approval?.state === "pending") {
     return `<div class="panel fx-side-panel">
       <div class="panel-head"><h2>${esc(L.tabApprovals)}</h2></div>
       <p class="fx-amount">${esc(r.approval.amount || "No amount")}</p>
@@ -481,7 +480,7 @@ function managePanel(r) {
     `<option value="${t.id}"${r.assignee === t.id ? " selected" : ""}>${esc(t.name)}</option>`).join("")}`;
   const pri = CONFIG.priorities.map((p) => `<option value="${p.id}"${r.priority === p.id ? " selected" : ""}>${esc(p.label)}</option>`).join("");
   // Sending for approval is Joe's call, so only Joe sees it.
-  const canSend = state.viewer === "joe" && r.approval?.state !== "pending" && r.status !== "done";
+  const canSend = approvalsOn() && state.viewer === "joe" && r.approval?.state !== "pending" && r.status !== "done";
   return `<div class="panel fx-side-panel">
       <div class="panel-head"><h2>${esc(L.manage)}</h2></div>
       <span class="fx-label">${esc(L.status)}</span>
@@ -720,7 +719,7 @@ function render() {
   const arg = parts[2];
   if (!page) page = seesAll() ? "queue" : "mine";
   if (page === "queue" && !seesAll()) page = "mine";
-  if (page === "approvals" && !isRyan()) page = seesAll() ? "queue" : "mine";
+  if (page === "approvals" && (!isRyan() || !approvalsOn())) page = seesAll() ? "queue" : "mine";
 
   const body = page === "new" ? newView()
     : page === "r" ? detailView(arg)

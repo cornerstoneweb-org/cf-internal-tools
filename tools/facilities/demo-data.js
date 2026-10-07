@@ -28,7 +28,7 @@ export function demoRequests(now = Date.now()) {
       activity: [a(3 * H, "r6", "Submitted"), teams(3 * H, "joe", "New emergency request")],
     },
     {
-      id: 1047, type: "keys", campus: "brentwood", location: "Front office",
+      id: 1047, type: "repair", campus: "brentwood", location: "Front office",
       title: "Office door won't lock",
       details: "The deadbolt turns but doesn't catch. We've been leaving the office unlocked overnight.",
       priority: "emergency", status: "progress", assignee: "eric",
@@ -95,7 +95,7 @@ export function demoRequests(now = Date.now()) {
       activity: [a(4 * D, "me", "Submitted"), teams(4 * D, "joe", "New request")],
     },
     {
-      id: 1042, type: "keys", campus: "livermore", location: "Student center",
+      id: 1042, type: "repair", campus: "livermore", location: "Student center",
       title: "Key for new student ministry intern",
       details: "Starting next Monday. Needs the student center and the storage closet behind it.",
       priority: "week", status: "done", assignee: "joe",
