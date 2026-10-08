@@ -198,21 +198,15 @@
 .fx-zoom button { position: absolute; top: 18px; right: 18px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.15); color: #fff; display: grid; place-items: center; }
 .fx-zoom button svg { width: 20px; height: 20px; }
 
-.fx-updates { margin-top: var(--space-2); }
-.fx-post { display: grid; gap: 8px; margin-bottom: var(--space-3); }
-.fx-post textarea { resize: vertical; }
-.fx-post-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.fx-check { display: inline-flex; gap: 8px; align-items: center; font-size: .85rem; color: var(--slate); }
-.fx-timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
-.fx-tl { display: flex; gap: 12px; }
-.fx-tl p { margin: 0; }
-.fx-tl time { font-size: .78rem; color: var(--faint); }
-.fx-tl-text { color: var(--slate); white-space: pre-wrap; }
-.fx-tl-av { width: 32px; height: 32px; border-radius: 50%; background: var(--teal-wash); color: var(--teal-d); font-weight: 700; display: grid; place-items: center; flex: none; font-size: .85rem; }
-.fx-tl.is-internal .fx-tl-av { background: #EDE9FE; color: #5B3FB8; }
-.fx-tl-teams p { font-size: .85rem; color: var(--faint); }
-.fx-tl-teams b { color: var(--slate); font-weight: 600; }
-.fx-tl-ic { width: 32px; height: 32px; border-radius: 9px; background: #5B5FC7; color: #fff; font-weight: 800; display: grid; place-items: center; flex: none; font-size: .9rem; transform: scale(.8); }
+.fx-msg { margin-top: var(--space-3); padding: 14px 16px; border-radius: 12px; background: var(--teal-wash); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.fx-msg p { margin: 0; color: var(--slate); }
+.fx-msg b { color: var(--ink); }
+.fx-history { margin-top: var(--space-3); }
+.fx-h-head { font-size: .78rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); margin: 0 0 8px; }
+.fx-timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fx-h { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .85rem; color: var(--slate); }
+.fx-h.is-teams { color: var(--faint); }
+.fx-h-meta { font-size: .78rem; color: var(--faint); white-space: nowrap; }
 
 .fx-detail-side { position: sticky; top: calc(var(--nav-h) + 16px); }
 .fx-side-panel { display: grid; gap: 12px; }

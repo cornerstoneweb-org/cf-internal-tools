@@ -25,6 +25,12 @@ export const CONFIG = {
   ],
   approver: { id: "ryan", name: "Ryan" },
 
+  // Updates and questions happen in Teams, not on the request page. The
+  // button opens a 1:1 Teams chat with this person, prefilled with the
+  // request number. email is Joe's work sign-in. Left blank, the button
+  // just opens Teams.
+  teamsContact: { name: "Joe", email: "" },
+
   // Campuses come from config/site.config.js. Online has no building.
   campusExclude: ["online"],
 
@@ -123,11 +129,12 @@ export const CONFIG = {
     detailWho: "Access for",
     detailWhere: "Doors or rooms",
     unassigned: "Not assigned yet",
-    timeline: "Updates",
-    addUpdate: "Add an update",
-    addUpdatePlaceholder: "What happened, what's next, or a question.",
-    internal: "Facilities team only (requester won't see this)",
-    post: "Post update",
+    timeline: "History",
+    msgHead: "Questions or updates?",
+    msgBody: (name) => `Message ${name} in Teams.`,
+    msgButton: (name) => `Message ${name}`,
+    msgPrefill: (id, title) => `About facilities request #${id} (${title}): `,
+    notified: (name) => `${name} notified in Teams`,
     manage: "Manage",
     status: "Status",
     assign: "Assign to",

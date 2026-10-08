@@ -434,23 +434,34 @@ function submitForm(form) {
 
 /* ================= one request ================= */
 function timelineHTML(r) {
-  // Newest first. Entries written in the same moment keep their order, so a
-  // Teams line always sits right above the change that caused it.
+  // A quiet record of what happened, newest first. Conversation lives in Teams.
+  // Entries written in the same moment keep their order.
   const items = r.activity.map((a, i) => ({ ...a, i }))
     .filter((a) => seesAll() || !a.internal)
     .sort((a, b) => (new Date(b.at) - new Date(a.at)) || (b.i - a.i));
   return items.map((a) => {
-    if (a.kind === "teams") {
-      return `<li class="fx-tl fx-tl-teams"><span class="fx-tl-ic" aria-hidden="true">T</span>
-        <div><p><b>${esc(L.teamsTag)} message to ${esc(nameOf(a.to, r))}</b> · ${esc(a.text)}</p>
-        <time datetime="${esc(a.at)}">${esc(DATE.format(new Date(a.at)))}</time></div></li>`;
-    }
-    const who = nameOf(a.by, r);
-    const internal = a.internal ? `<span class="fx-pill fx-internal">Team only</span>` : "";
-    return `<li class="fx-tl${a.internal ? " is-internal" : ""}"><span class="fx-tl-av" aria-hidden="true">${esc(who[0] ?? "?")}</span>
-      <div><p><b>${esc(who)}</b> ${internal}</p><p class="fx-tl-text">${esc(a.text)}</p>
-      <time datetime="${esc(a.at)}">${esc(DATE.format(new Date(a.at)))}</time></div></li>`;
+    const text = a.kind === "teams" ? L.notified(nameOf(a.to, r)) : a.text;
+    const who = a.kind === "teams" ? "" : `${esc(nameOf(a.by, r))} · `;
+    return `<li class="fx-h${a.kind === "teams" ? " is-teams" : ""}"><span class="fx-h-text">${esc(text)}</span>
+      <span class="fx-h-meta">${who}<time datetime="${esc(a.at)}">${esc(DATE.format(new Date(a.at)))}</time></span></li>`;
   }).join("");
+}
+
+// Opens a 1:1 Teams chat with the facilities contact, prefilled with the request.
+function teamsChatUrl(r) {
+  const c = CONFIG.teamsContact ?? {};
+  if (!c.email) return "https://teams.microsoft.com/";
+  const msg = encodeURIComponent(L.msgPrefill(r.id, r.title));
+  return `https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(c.email)}&message=${msg}`;
+}
+
+function messageHTML(r) {
+  const name = CONFIG.teamsContact?.name ?? "Joe";
+  if (actor() === "joe") return "";
+  return `<section class="fx-msg">
+      <p><b>${esc(L.msgHead)}</b> ${esc(L.msgBody(name))}</p>
+      <a class="btn" href="${esc(teamsChatUrl(r))}" target="_blank" rel="noopener">${esc(L.msgButton(name))}</a>
+    </section>`;
 }
 
 function approvalBanner(r) {
@@ -534,15 +545,9 @@ function detailView(id) {
         <dl class="fx-facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
         ${r.details ? `<p class="fx-details">${esc(r.details)}</p>` : ""}
         ${photos}
-        <section class="panel fx-updates">
-          <div class="panel-head"><h2>${esc(L.timeline)}</h2></div>
-          <form class="fx-post" id="fx-post">
-            <textarea class="fx-input" name="text" rows="2" placeholder="${esc(L.addUpdatePlaceholder)}" aria-label="${esc(L.addUpdate)}"></textarea>
-            <div class="fx-post-row">
-              ${isTeam() || isRyan() ? `<label class="fx-check"><input type="checkbox" name="internal"> ${esc(L.internal)}</label>` : "<span></span>"}
-              <button type="submit" class="btn">${esc(L.post)}</button>
-            </div>
-          </form>
+        ${messageHTML(r)}
+        <section class="fx-history">
+          <h2 class="fx-h-head">${esc(L.timeline)}</h2>
           <ol class="fx-timeline">${timelineHTML(r)}</ol>
         </section>
       </div>
@@ -694,20 +699,6 @@ function wire() {
   mountEl.addEventListener("submit", (e) => {
     if (!e.target.closest(".fx-root")) return;
     if (e.target.id === "fx-form") { e.preventDefault(); submitForm(e.target); return; }
-    if (e.target.id === "fx-post") {
-      e.preventDefault();
-      const r = current();
-      const fd = new FormData(e.target);
-      const text = String(fd.get("text") ?? "").trim();
-      if (!r || !text) return;
-      const internal = fd.get("internal") === "on";
-      log(r, text, internal ? { internal: true } : {});
-      if (!internal) {
-        if (actor() === r.requester.id) notify(r, r.assignee && r.assignee !== "vendor" ? r.assignee : "joe", "New update from the requester");
-        else notify(r, r.requester.id, "New update on your request");
-      }
-      save(); render();
-    }
   });
 }
 
