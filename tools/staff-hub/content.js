@@ -107,13 +107,14 @@ export const CONTENT = {
   //   accent: the tile color. ink: the icon color (default white). Use a
   //           dark ink on lime, which is too light for a white icon.
   //   url:    "#/..." stays in the hub; anything else opens a new tab.
-  // Request forms live under Requests where people go looking for them.
+  // Request forms live under Requests. Facilities is the one exception,
+  // pinned here because staff use it often.
   quickActions: [
     { icon: "mail",   label: "Email",    note: "Outlook",          accent: "var(--teal)",   url: "https://outlook.office.com/" },
     { icon: "chat",   label: "Teams",    note: "Chat and calls",   accent: "var(--cyan)",   url: "https://teams.microsoft.com/v2/" },
     { icon: "people", label: "Central",  note: "CCB",              accent: "var(--jungle)", ink: "var(--lime)", url: "https://cornerstonefellowship.ccbchurch.com/goto/login" },
     { icon: "clock",  label: "OnePoint", note: "Pay and time off", accent: "var(--orange)", url: "https://secure.onehcm.com/ta/CFLCA.login?rnd=QSZ&NoRedirect=1" },
-    { icon: "doc",    label: "Handbook", note: "Search it",        accent: "var(--lime)",   ink: "var(--jungle)", url: "#/handbook" },
+    { icon: "wrench", label: "Facilities", note: "Request",       accent: "var(--lime)",   ink: "var(--jungle)", url: "#/facilities" },
     { icon: "person", label: "Roster",   note: "Staff directory",  accent: "#FFFFFF",       ink: "var(--teal)",   url: "#/directory" },
   ],
 
