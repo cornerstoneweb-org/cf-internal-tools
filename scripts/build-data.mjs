@@ -10,7 +10,7 @@ import os from "node:os";
 export const ONEDRIVE_ROOT = path.join(
   os.homedir(),
   "Library/CloudStorage/OneDrive-CornerstoneFellowshipofLivermoreCalifornia",
-  "CF Work Files/11_CLAUDE-Workspace/CF Internal Tools"
+  "CF Work Files/11_CLAUDE_Code/Staff Internal Tools_CC"
 );
 
 const tool = process.argv[2];

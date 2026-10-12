@@ -42,7 +42,7 @@ corrupt `.git`.
 Documents, decisions, source Excel workbooks and reference material live in
 OneDrive:
 
-`CF Work Files/11_CLAUDE-Workspace/CF Internal Tools/`
+`CF Work Files/11_CLAUDE_Code/Staff Internal Tools_CC/`
 
 Build scripts read workbooks from that OneDrive path and write JSON into
 `tools/<tool>/data/` here. The generated JSON is committed. The workbooks are

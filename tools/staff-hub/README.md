@@ -71,6 +71,8 @@ link on purpose. A row of "coming soon" buttons is worse than no row.
 The Canva site at cornerstonefellowship.my.canva.site/staff-hub, audited
 2026-09-20. Audit, findings and link inventory are in the workspace folder
 under `01_Staff-Hub/reference/`.
+The workspace folder is OneDrive `CF Work Files/11_CLAUDE_Code/Staff Internal Tools_CC/`
+(replaced `11_CLAUDE-Workspace/CF Internal Tools/` on 2026-10-11).
 
 ## Staff never see maintenance metadata
 

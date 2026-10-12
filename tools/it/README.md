@@ -7,7 +7,7 @@ Not started.
 
 ## Data source
 TBD. If a workbook is the source of truth, it lives in OneDrive under
-`CF Internal Tools/<tool folder>/source-workbooks/` and the build script
+`Staff Internal Tools_CC/<tool folder>/source-workbooks/` and the build script
 writes JSON into `data/`.
 
 ## Buy vs build
