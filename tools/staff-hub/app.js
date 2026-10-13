@@ -1,6 +1,6 @@
 import { CONFIG } from "./config.js";
 import { CONTENT } from "./content.js";
-import { CAMPUSES } from "../../config/site.config.js";
+import { CAMPUSES, TOOLS, PREVIEW_HOSTS } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
 import { getSession, isStaff, displayName, userMeta, signIn, signOut, selectAll } from "../../shared/js/auth.js";
 import { watchForNewVersion } from "../../shared/js/version-check.js";
@@ -134,7 +134,18 @@ const needsAttention = (f) => f.state === "never" || f.state === "overdue";
 const pillClass = (s) => (s === "overdue" ? "pill-warn" : s === "due-soon" ? "pill-warn" : s === "ok" ? "pill-ok" : "pill-mute");
 
 /* ================= data helpers ================= */
-const sections = () => CONTENT.sections;
+// Facilities shows only when its flag in site.config.js is on, or on a
+// preview host so it can still be tested. Off, its tile, card and route
+// disappear.
+const PREVIEW = ["localhost", "127.0.0.1", ...PREVIEW_HOSTS].includes(location.hostname);
+const FACILITIES_ON = PREVIEW || TOOLS.find((t) => t.id === "facilities")?.enabled === true;
+const hiddenUrl = (url) => !FACILITIES_ON && /^#\/?facilities/.test(url ?? "");
+const SECTIONS = CONTENT.sections.map((s) => ({
+  ...s,
+  cards: s.cards.filter((c) => !c.links?.some((l) => hiddenUrl(l.url))),
+}));
+const QUICK_ACTIONS = (CONTENT.quickActions ?? []).filter((a) => !hiddenUrl(a.url));
+const sections = () => SECTIONS;
 // Each section's accent rides along as a CSS custom property, so one value in
 // content.js colors the nav dot, the home card and the section page together.
 const ac = (s) => s?.accent ?? "var(--sec-default)";
@@ -275,10 +286,10 @@ function homeView() {
   const blockHead = (title, subText) => `<div class="sec-head"><h2>${esc(title)}</h2>${subText ? `<p>${esc(subText)}</p>` : ""}</div>`;
 
   // Quick links as app icons.
-  const quick = CONFIG.features.quickActions && CONTENT.quickActions?.length
+  const quick = CONFIG.features.quickActions && QUICK_ACTIONS.length
     ? `<section class="quick-block">
          ${blockHead(L.quickHeading, L.quickSub)}
-         <div class="apps">${CONTENT.quickActions.map((a) => {
+         <div class="apps">${QUICK_ACTIONS.map((a) => {
            const out = isInternal(a.url) ? "" : ' target="_blank" rel="noopener"';
            return `<a class="app" href="${esc(a.url)}"${out} style="--tile:${esc(a.accent ?? "var(--teal)")};--glyph:${esc(a.ink ?? "#fff")}">
              <span class="app-ic" aria-hidden="true">${ICONS[a.icon] ?? ""}</span>
@@ -1014,7 +1025,7 @@ function route() {
   // Facilities Requests is its own tool (tools/facilities/) drawn inside the
   // hub so it shares the nav and the Microsoft sign-in. It owns everything
   // after #/facilities.
-  if (id === "facilities") {
+  if (id === "facilities" && FACILITIES_ON) {
     renderNav("requests");
     $("search").placeholder = CONFIG.labels.searchPlaceholder;
     mountFacilities($("view"), { userName: firstName, toast });
@@ -1187,6 +1198,8 @@ async function start() {
 }
 
 watchForNewVersion();
+if (PREVIEW) document.body.insertAdjacentHTML("beforeend",
+  `<div class="preview-badge" title="${esc(CONFIG.labels.previewBadgeNote)}">${esc(CONFIG.labels.previewBadge)}</div>`);
 start();
 
 // Going somewhere clears the filter and closes search. Without this, an

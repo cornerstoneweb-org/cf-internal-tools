@@ -7,6 +7,13 @@ export const SITE = {
   supportContact: "", // who staff email when a tool is broken
 };
 
+// The preview (staging) site. Same code and same Supabase as live, but every
+// tool shows regardless of its flag below, and the page wears a Preview badge.
+// localhost is always treated as preview.
+// GitHub's default address for the cf-internal-tools-preview repo. Live has a
+// custom domain, so this hostname only ever serves the preview copy.
+export const PREVIEW_HOSTS = ["cornerstoneweb-org.github.io"];
+
 export const CAMPUSES = [
   { id: "livermore", name: "Livermore" },
   { id: "brentwood", name: "Brentwood" },
@@ -17,7 +24,8 @@ export const CAMPUSES = [
 ];
 
 // Feature flags. A tool only appears on the home page and only loads when
-// enabled. Build a tool fully before flipping it on.
+// enabled. Build a tool fully before flipping it on. On a preview host every
+// tool shows, so it can be tested there first.
 export const TOOLS = [
   {
     id: "staff-hub",

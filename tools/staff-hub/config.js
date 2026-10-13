@@ -58,6 +58,10 @@ export const CONFIG = {
   },
 
   labels: {
+    // Corner badge on the preview site (PREVIEW_HOSTS in site.config.js)
+    previewBadge: "Preview",
+    previewBadgeNote: "Preview site. Not what staff see.",
+
     // Staff directory
     dirSearch: "Search by name or role",
     dirAll: "All",

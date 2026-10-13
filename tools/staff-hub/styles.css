@@ -674,3 +674,9 @@ body.is-locked .gnav, body.is-locked .main, body.is-locked .skip, body.is-locked
 /* Search results: the title sits straight in the view, no page-head. */
 #view > .page-title { margin: var(--space-4) 0 0; }
 #view > .page-title + .page-sub { margin-bottom: var(--space-3); }
+
+/* Preview site badge (PREVIEW_HOSTS in site.config.js). Never on live. */
+.preview-badge { position: fixed; left: 12px; bottom: 12px; z-index: 1000; pointer-events: none;
+  padding: 4px 10px; border-radius: 999px; background: var(--orange); color: #fff;
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  box-shadow: 0 2px 8px rgb(0 0 0 / .2); }
