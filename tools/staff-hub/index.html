@@ -4,43 +4,56 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- version:start (written by scripts/stamp-version.mjs, do not edit) -->
-  <meta name="app-version" content="20261016001013">
+  <meta name="app-version" content="20261016001921">
   <script type="importmap">{
     "imports": {
-      "../../config/site.config.js": "../../config/site.config.js?v=20261016001013",
-      "../../config/supabase.config.js": "../../config/supabase.config.js?v=20261016001013",
-      "../../shared/js/auth.js": "../../shared/js/auth.js?v=20261016001013",
-      "../../shared/js/data.js": "../../shared/js/data.js?v=20261016001013",
-      "../../shared/js/home.js": "../../shared/js/home.js?v=20261016001013",
-      "../../shared/js/supabase.js": "../../shared/js/supabase.js?v=20261016001013",
-      "../../shared/js/ui.js": "../../shared/js/ui.js?v=20261016001013",
-      "../../shared/js/version-check.js": "../../shared/js/version-check.js?v=20261016001013",
-      "../comms/app.js": "../comms/app.js?v=20261016001013",
-      "../comms/config.js": "../comms/config.js?v=20261016001013",
-      "../facilities/app.js": "../facilities/app.js?v=20261016001013",
-      "../facilities/config.js": "../facilities/config.js?v=20261016001013",
-      "../facilities/demo-data.js": "../facilities/demo-data.js?v=20261016001013",
-      "../facilities/facilities.js": "../facilities/facilities.js?v=20261016001013",
-      "../it/app.js": "../it/app.js?v=20261016001013",
-      "../it/config.js": "../it/config.js?v=20261016001013",
-      "./app.js": "./app.js?v=20261016001013",
-      "./brand-library.js": "./brand-library.js?v=20261016001013",
-      "./config.js": "./config.js?v=20261016001013",
-      "./content.js": "./content.js?v=20261016001013"
+      "../../config/site.config.js": "../../config/site.config.js?v=20261016001921",
+      "../../config/supabase.config.js": "../../config/supabase.config.js?v=20261016001921",
+      "../../shared/js/auth.js": "../../shared/js/auth.js?v=20261016001921",
+      "../../shared/js/data.js": "../../shared/js/data.js?v=20261016001921",
+      "../../shared/js/home.js": "../../shared/js/home.js?v=20261016001921",
+      "../../shared/js/supabase.js": "../../shared/js/supabase.js?v=20261016001921",
+      "../../shared/js/ui.js": "../../shared/js/ui.js?v=20261016001921",
+      "../../shared/js/version-check.js": "../../shared/js/version-check.js?v=20261016001921",
+      "../comms/app.js": "../comms/app.js?v=20261016001921",
+      "../comms/config.js": "../comms/config.js?v=20261016001921",
+      "../facilities/app.js": "../facilities/app.js?v=20261016001921",
+      "../facilities/config.js": "../facilities/config.js?v=20261016001921",
+      "../facilities/demo-data.js": "../facilities/demo-data.js?v=20261016001921",
+      "../facilities/facilities.js": "../facilities/facilities.js?v=20261016001921",
+      "../it/app.js": "../it/app.js?v=20261016001921",
+      "../it/config.js": "../it/config.js?v=20261016001921",
+      "./app.js": "./app.js?v=20261016001921",
+      "./brand-library.js": "./brand-library.js?v=20261016001921",
+      "./config.js": "./config.js?v=20261016001921",
+      "./content.js": "./content.js?v=20261016001921"
     }
   }</script>
   <!-- version:end -->
   <title>Staff Hub | Cornerstone Fellowship</title>
   <meta name="theme-color" content="#F5F5F7">
+  <!-- Link preview card (Teams, Outlook, iMessage). URLs must be absolute and
+       are the one place preview and live differ. -->
+  <meta name="description" content="Links, requests and HR info for Cornerstone staff.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Cornerstone Fellowship">
+  <meta property="og:title" content="Staff Hub | Cornerstone Fellowship">
+  <meta property="og:description" content="Links, requests and HR info for Cornerstone staff.">
+  <meta property="og:url" content="https://staff.cornerstoneweb.org/tools/staff-hub/">
+  <meta property="og:image" content="https://staff.cornerstoneweb.org/shared/assets/img/staff-hub-share.png?v=2">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Cornerstone Fellowship Staff Hub">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="../../shared/assets/brand/cf-icon-black.png">
   <link rel="apple-touch-icon" href="../../shared/assets/brand/favicon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="../../shared/css/tokens.css?v=20261016001013">
-  <link rel="stylesheet" href="../../shared/css/base.css?v=20261016001013">
-  <link rel="stylesheet" href="styles.css?v=20261016001013">
-  <link rel="stylesheet" href="../facilities/styles.css?v=20261016001013">
+  <link rel="stylesheet" href="../../shared/css/tokens.css?v=20261016001921">
+  <link rel="stylesheet" href="../../shared/css/base.css?v=20261016001921">
+  <link rel="stylesheet" href="styles.css?v=20261016001921">
+  <link rel="stylesheet" href="../facilities/styles.css?v=20261016001921">
 </head>
 <body class="is-locked">
   <!-- Sign-in screen. Shown until a CF staff session exists. This is the
@@ -111,6 +124,6 @@
        CONFIG.tabs in app.js. -->
   <nav class="tabbar" id="tabbar" aria-label="Sections"></nav>
 
-  <script type="module" src="app.js?v=20261016001013"></script>
+  <script type="module" src="app.js?v=20261016001921"></script>
 </body>
 </html>
