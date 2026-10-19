@@ -82,6 +82,7 @@ export const CONTENT = {
     { group: "Federal", title: "Know Your Rights: Workplace Discrimination", agency: "EEOC", file: "fed-eeo-know-your-rights.pdf" },
     { group: "Federal", title: "Employee Polygraph Protection Act", agency: "U.S. Department of Labor", file: "fed-polygraph.pdf" },
     { group: "Federal", title: "Uniformed Services Employment Rights (USERRA)", agency: "U.S. Department of Labor", file: "fed-userra.pdf" },
+    { group: "Federal", title: "Medicare Part D Creditable Coverage Notice", agency: "Cornerstone HR", file: "../hr/medicare-part-d-notice.pdf" },
   ],
   hrDocs: {
     payDatesPdf: "../../shared/assets/docs/hr/2026-Pay-Dates.pdf",
