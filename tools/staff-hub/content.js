@@ -90,11 +90,8 @@ export const CONTENT = {
     handbookPdf: HANDBOOK_PDF,
   },
 
-  // Photos for the welcome banner on Home. One is picked at random on each
-  // visit. Files live in shared/assets/photos/ (web-sized, about 1800px wide).
-  //   place:  optional label shown in the corner, e.g. "Brentwood"
-  //   focus:  optional CSS object-position, to keep the subject in frame
-  // Empty = plain CF teal banner. Add photos here when good ones come in.
+  // Photos for the old welcome banner. Not used since the "Connected" hero
+  // (2026-10-25), which draws a pixel field instead. Kept for a later use.
   heroPhotos: [],
 
   contact: {
@@ -113,7 +110,7 @@ export const CONTENT = {
   quickActions: [
     { icon: "mail",   label: "Email",    note: "Outlook",          accent: "var(--teal)",   url: "https://outlook.office.com/" },
     { icon: "chat",   label: "Teams",    note: "Chat and calls",   accent: "var(--cyan)",   url: "https://teams.microsoft.com/v2/" },
-    { icon: "people", label: "Central",  note: "CCB",              accent: "var(--jungle)", ink: "var(--lime)", url: "https://cornerstonefellowship.ccbchurch.com/goto/login" },
+    { icon: "people", label: "Central",  note: "People database",  accent: "var(--jungle)", ink: "var(--lime)", url: "https://cornerstonefellowship.ccbchurch.com/goto/login" },
     { icon: "clock",  label: "OnePoint", note: "Pay and time off", accent: "var(--orange)", url: "https://secure.onehcm.com/ta/CFLCA.login?rnd=QSZ&NoRedirect=1" },
     { icon: "wrench", label: "Facilities", note: "Request",       accent: "var(--lime)",   ink: "var(--jungle)", url: "#/facilities" },
     { icon: "person", label: "Roster",   note: "Staff directory",  accent: "#FFFFFF",       ink: "var(--teal)",   url: "#/directory" },
@@ -125,13 +122,25 @@ export const CONTENT = {
   //   link / linkLabel: optional call to action.
   //   label:  optional tag above the text, e.g. "HR" or "Benefits".
   //           Defaults to "Heads up" (info) or "Important" (urgent).
+  //   title / when / where: short version for the Heads up card on Home,
+  //           e.g. "Open Enrollment meeting", "Wed, Oct 28, 10 AM". Optional;
+  //           without a title the card shows the full text.
+  //   date:   "YYYY-MM-DD", marks the day in Home's "This week". Optional.
+  //   dayLabel: short label under that day, e.g. "Open Enrollment due".
   announcement: {
     level: "info",
-    text: "Employee Benefits Open Enrollment meeting: Wed, Oct 28, 10 AM, Livermore campus, 4/5 Grade Room.",
-    link: null,
-    linkLabel: null,
-    until: "2026-10-28",
+    label: "Open Enrollment",
+    title: "Open Enrollment is open",
+    dayLabel: "Open Enrollment due",
+    when: "Due Friday, Nov 6",
+    where: "Online in Employee Navigator, our new benefits provider",
+    text: "Open Enrollment is open now in Employee Navigator, our new benefits provider. Log in, review your benefits, choose a plan or decline it, then sign to finish. Your elections only count once you sign. Due Friday, Nov 6. Questions? Contact HR.",
+    link: "../../shared/assets/docs/hr/Employee-Navigator-Enrollment-Guide.pdf",
+    linkLabel: "Enrollment guide (PDF)",
+    date: "2026-11-06",
+    until: "2026-11-06",
   },
+
 
   sections: [
     {
@@ -144,28 +153,28 @@ export const CONTENT = {
       reviewEvery: 12,
       cards: [
         {
-          title: "Graphic Design",
+          title: "Graphic Design", icon: "brush",
           body: "Request digital or print designs for your ministry.",
           owner: "Communications",
           reviewed: null,
           links: [{ label: "Start a request", url: "https://forms.monday.com/forms/6de2b801c96808d6d23344a75eddab75?r=use1" }],
         },
         {
-          title: "Video Design",
+          title: "Video Design", icon: "play",
           body: "Start a video request for your ministry or program.",
           owner: "Communications",
           reviewed: null,
           links: [{ label: "Start a request", url: "https://forms.monday.com/forms/059e6ecd1f5dc95eb69f8138e27fc9c9?r=use1" }],
         },
         {
-          title: "Web Design",
+          title: "Web Design", icon: "globe",
           body: "Need a new or updated webpage?",
           owner: "Communications",
           reviewed: null,
           links: [{ label: "Start a request", url: "https://forms.monday.com/forms/b4b919ea5e6710981ec65e4228f7d248?r=use1" }],
         },
         {
-          title: "IT Support",
+          title: "IT Support", icon: "laptop",
           body: "Something not working? Let us help.",
           owner: "Dennis",
           reviewed: null,
@@ -174,7 +183,7 @@ export const CONTENT = {
           links: [{ label: "Open a ticket", url: null, status: "pending" }],
         },
         {
-          title: "Facilities",
+          title: "Facilities", icon: "wrench",
           body: "Repairs, building issues, keys and access.",
           owner: "Joe",
           reviewed: null,
@@ -187,8 +196,12 @@ export const CONTENT = {
     {
       id: "software", icon: "grid",
       accent: "var(--sec-software)",
-      title: "Software",
-      blurb: "The programs we use to get work done.",
+      title: "Apps & Tools",
+      blurb: "What we use to get work done.",
+      // "Start here" row at the top of the page: keys from quickActions, in
+      // order. A card with hideBelow: true stays out of the list under it
+      // (its only link is already in the row) but is still searchable.
+      startHere: ["email", "teams", "central", "onepoint"],
       enabled: true,
       layout: "full",
       reviewEvery: 12,
@@ -215,13 +228,14 @@ export const CONTENT = {
           ],
         },
         {
-          title: "Central (CCB)",
-          body: "Our church management system. People, groups, events, giving and volunteers in one place, so we can connect, communicate and follow up.",
+          title: "Central",
+          search: "ccb church community builder people database",   // old name, still findable
+          body: "Our people database. People, groups, events, giving and volunteers in one place, so we can connect, communicate and follow up.",
           owner: "Ryan",
           reviewed: null,
           links: [
             { label: "Log in to Central", url: "https://cornerstonefellowship.ccbchurch.com/goto/login" },
-            { label: "Help center", url: "https://support.pushpay.com/s/topics-chms", note: "hosted by CCB" },
+            { label: "Help center", url: "https://support.pushpay.com/s/topics-chms" },
             { label: "Guide documents", url: null, status: "pending" },
           ],
         },
@@ -244,7 +258,7 @@ export const CONTENT = {
           links: [{ label: "Log in to Ramp", url: "https://app.ramp.com/sign-in" }],
         },
         {
-          title: "OnePoint",
+          title: "OnePoint", hideBelow: true,
           body: "Your HR dashboard. Pay stubs, time off, benefits and personal information.",
           owner: "Bou",
           reviewed: null,
@@ -262,6 +276,18 @@ export const CONTENT = {
       layout: "compact",
       reviewEvery: 6,
       cards: [
+        {
+          title: "Open Enrollment",
+          body: "Choose your benefits in Employee Navigator, our new benefits provider. Due Friday, Nov 6. Your elections only count once you sign at the end.",
+          owner: "Bou",
+          reviewed: "2026-11-02",
+          reviewEvery: 12,
+          links: [
+            { label: "Log in to Employee Navigator", url: "https://www.employeenavigator.com/benefits/Account/Login" },
+            { label: "Enrollment guide (8 steps, PDF)", url: "../../shared/assets/docs/hr/Employee-Navigator-Enrollment-Guide.pdf", download: true },
+          ],
+          search: "open enrollment benefits insurance medical dental vision employee navigator",
+        },
         {
           title: "Staff Roster",
           body: "Who does what around here. Chat, call or email anyone on staff.",
@@ -436,15 +462,13 @@ export const CONTENT = {
     },
 
     {
-      id: "values",
+      id: "values", icon: "heart",
       accent: "var(--sec-values)",
       title: "Our Staff Values",
       blurb: "The five we hold each other to.",
       enabled: true,
-      // placement: "home" means this section has no page and no nav entry.
-      // It renders on Home under the welcome. Cards stay searchable and the
-      // admin view still tracks them. Delete this line to give it a page back.
-      placement: "home",
+      // Its own page since Oct 29 (Ryan): off Home, listed under General.
+      // Add placement: "home" back to show it on Home with no page.
       layout: "values",
       reviewEvery: 24,
       cards: [

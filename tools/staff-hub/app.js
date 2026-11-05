@@ -2,13 +2,12 @@ import { CONFIG } from "./config.js";
 import { CONTENT } from "./content.js";
 import { CAMPUSES, TOOLS, PREVIEW_HOSTS } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
-import { getSession, isStaff, displayName, userMeta, signIn, signOut, selectAll } from "../../shared/js/auth.js";
+import { getSession, isStaff, displayName, userMeta, signIn, signOut, selectAll, saveMine, clearMine } from "../../shared/js/auth.js";
 import { watchForNewVersion } from "../../shared/js/version-check.js";
 import { toast } from "../../shared/js/ui.js";
 import { mountFacilities } from "../facilities/facilities.js";
 
 const LIB = "../../shared/assets/brand/library/";
-const PHOTOS = "../../shared/assets/photos/";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -48,6 +47,11 @@ const ICONS = {
   home:     svg('<path d="M4 10.5 12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>'),
   search:   svg('<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>'),
   chevron:  svg('<path d="m9 6 6 6-6 6"/>'),
+  heart:    svg('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'),
+  out:      svg('<path d="M8 16 16 8M9.5 8H16v6.5"/>'),
+  brush:    svg('<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="m14 6 3 3"/>'),
+  globe:    svg('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.5 3.6 5.3 3.6 8.5s-1.2 6-3.6 8.5c-2.4-2.5-3.6-5.3-3.6-8.5s1.2-6 3.6-8.5z"/>'),
+  laptop:   svg('<rect x="4.5" y="5" width="15" height="10" rx="1.5"/><path d="M2.5 18.5h19"/>'),
 };
 const isInternal = (url) => String(url ?? "").startsWith("#");
 
@@ -147,6 +151,52 @@ const SECTIONS = CONTENT.sections.map((s) => ({
     : c),
 }));
 const QUICK_ACTIONS = (CONTENT.quickActions ?? []).filter((a) => !hiddenUrl(a.url));
+const slug = (t) => String(t ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+// Quick links each person can choose (2026-10-25). Only the hub's own links
+// are offered, never a typed-in address, so every choice works. Picks are
+// saved as these keys in the quick_link_prefs table (own row only, RLS).
+// A key whose link is later removed is simply skipped.
+const QUICK_MAX = 12;
+const GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+let myQuick = null;   // null = the usual links from content.js
+function quickCatalog() {
+  const G = CONFIG.labels.quickGroups;
+  const fromCards = (id, prefix, icon, group) => (sections().find((x) => x.id === id && x.enabled)?.cards ?? [])
+    .map((c) => ({ c, link: (c.links ?? []).find((l) => linkStatus(l) === "ok") }))
+    .filter((x) => x.link)
+    .map(({ c, link }) => ({ key: `${prefix}-${slug(c.title)}`, label: c.title, note: link.label, url: link.url, icon, group }));
+  return [
+    ...QUICK_ACTIONS.map((a) => ({ key: a.id ?? slug(a.label), label: a.label, note: a.note ?? "", url: a.url, icon: a.icon, group: G.everyday })),
+    ...fromCards("software", "sw", "grid", G.software),
+    ...fromCards("requests", "rq", "requests", G.requests),
+    ...liveSections().filter((x) => !onHome(x)).map((x) => ({
+      key: `pg-${x.id}`, label: x.title, note: CONFIG.labels.quickPageNote, url: `#/${x.id}`, icon: x.icon in ICONS ? x.icon : "doc", group: G.pages,
+    })),
+  ];
+}
+function myQuickItems() {
+  const cat = quickCatalog();
+  if (!myQuick) return cat.filter((x) => x.group === CONFIG.labels.quickGroups.everyday);
+  const byKey = new Map(cat.map((x) => [x.key, x]));
+  return myQuick.map((k) => byKey.get(k)).filter(Boolean);
+}
+function appsHTML() {
+  const items = myQuickItems();
+  if (!items.length) return `<p class="empty-soft">${esc(CONFIG.labels.quickEmpty)}</p>`;
+  return tilesHTML(items);
+}
+function tilesHTML(items) {
+  return items.map((a) => {
+    const out = isInternal(a.url) ? "" : ' target="_blank" rel="noopener"';
+    const ext = !isInternal(a.url);
+    return `<a class="app${ext ? " is-ext" : ""}" href="${esc(a.url)}"${out}${ext ? ` aria-label="${esc(`${a.label}, ${CONFIG.labels.opensNewTab}`)}"` : ""}>
+      <span class="app-ic" aria-hidden="true">${ICONS[a.icon] ?? ICONS.doc}</span>
+      <b>${esc(a.label)}</b><span class="app-note">${esc(a.note ?? "")}</span>
+      ${ext ? `<span class="app-out" aria-hidden="true">${ICONS.out}</span>` : ""}
+    </a>`;
+  }).join("");
+}
 const sections = () => SECTIONS;
 // Each section's accent rides along as a CSS custom property, so one value in
 // content.js colors the nav dot, the home card and the section page together.
@@ -255,86 +305,69 @@ function greetingText() {
 }
 
 function homeView() {
-  const photos = CONTENT.heroPhotos ?? [];
-  const photo = photos.length ? photos[Math.floor(Math.random() * photos.length)] : null;
   const L = CONFIG.labels;
-  const sub = firstName && !greetingText().includes("{name}") && L.heroSubNamed
-    ? L.heroSubNamed(firstName) : (L.heroSub ?? L.welcomeLede);
-  // The dark hero: date, a big greeting, and a Spotlight-style search button
-  // that opens the real search in the nav.
+  // "Dashboard" look (Oct 29): the greeting and date, then cards. Search
+  // lives in the top bar on every page.
   const head = CONFIG.features.greeting
-    ? `<section class="hero${photo ? " has-photo" : ""}">
-         ${photo ? `<img class="hero-img" src="${PHOTOS}${esc(photo.src)}" alt="${esc(photo.alt ?? "")}"
-            style="object-position:${esc(photo.focus ?? "center")}" fetchpriority="high">` : ""}
-         <div class="hero-text">
-           <p class="hero-date">${esc(DATE_FMT.format(new Date()))}</p>
-           <h1>${esc(withName(greetingText()))}</h1>
-           <p class="hero-sub">${esc(sub)}</p>
-           ${CONFIG.features.search ? `<label class="spot">
-             ${ICONS.search}<input type="search" id="hero-q" autocomplete="off" spellcheck="false"
-               placeholder="${esc(L.heroSearch ?? L.searchPlaceholder)}" aria-label="Search the hub"><kbd>/</kbd>
-           </label>` : ""}
-         </div>
-         ${photo?.place ? `<span class="hero-place">${esc(photo.place)}</span>`
-           : `<img class="hero-mark" src="../../shared/assets/brand/cf-icon-white.png" alt="" aria-hidden="true">`}
-       </section>
-       <div class="hero-results" id="hero-results" aria-live="polite"></div>`
+    ? `${noticeCardHTML()}<div class="dhead">
+         <div><h1>${esc(withName(greetingText()))}<span>${esc(L.heroWelcome)}</span></h1>
+           <p>${esc(L.heroLine)}</p></div>
+         <span class="ddate">${ICONS.clock}${esc(DATE_FMT.format(new Date()))}</span>
+       </div>`
     : `<div class="welcome">
          <h1>${esc(L.welcomeTitle)}</h1>
          <p class="welcome-lede">${esc(L.welcomeLede)}</p>
          ${(L.welcomeBody ?? []).map((para) => `<p>${esc(para)}</p>`).join("")}
        </div>`;
+  const top = `<div class="drow is-single">${weekCardHTML()}</div>`;
+  // The "Start here" row from Apps & Tools, then one staff value a week.
+  const startKeys = sections().find((x) => x.startHere)?.startHere ?? [];
+  const catalog = quickCatalog();
+  const startItems = startKeys.map((k) => catalog.find((x) => x.key === k)).filter(Boolean);
+  const start = startItems.length
+    ? `<section class="dcard" aria-labelledby="dstart-h"><div class="dcard-h"><h2 id="dstart-h">${esc(L.startHere)}</h2>
+         <a class="dlink" href="#/software">${esc(L.seeAll)} ${ICONS.chevron}</a></div>
+         <div class="apps">${tilesHTML(startItems)}</div></section>` : "";
 
   const blockHead = (title, subText) => `<div class="sec-head"><h2>${esc(title)}</h2>${subText ? `<p>${esc(subText)}</p>` : ""}</div>`;
 
-  // Quick links as app icons.
-  const quick = CONFIG.features.quickActions && QUICK_ACTIONS.length
+  // Quick links: the person's own picks, or the usual ones. "Edit" opens
+  // the picker (wireQuickEdit).
+  const quick = CONFIG.features.quickActions
     ? `<section class="quick-block">
-         ${blockHead(L.quickHeading, L.quickSub)}
-         <div class="apps">${QUICK_ACTIONS.map((a) => {
-           const out = isInternal(a.url) ? "" : ' target="_blank" rel="noopener"';
-           return `<a class="app" href="${esc(a.url)}"${out} style="--tile:${esc(a.accent ?? "var(--teal)")};--glyph:${esc(a.ink ?? "#fff")}">
-             <span class="app-ic" aria-hidden="true">${ICONS[a.icon] ?? ""}</span>
-             <b>${esc(a.label)}</b><span class="app-note">${esc(a.note ?? "")}</span>
-           </a>`;
-         }).join("")}</div>
+         <div class="sec-head sec-head-row"><div><h2>${esc(L.quickHeading)}</h2><p>${esc(L.quickSub)}</p></div>
+           <button type="button" class="btn btn-ghost quick-edit" data-quick-edit>${esc(L.quickEdit)}</button></div>
+         <div class="apps" id="apps">${appsHTML()}</div>
        </section>` : "";
 
-  // Sections as a tile grid. The first live section gets the big tile and
-  // lists what is inside it; the rest get a tile each; parked sections share
-  // one quiet "coming later" tile.
+  // The first live section (Requests) as a table of forms, then a card for
+  // each other section. Parked sections share one quiet "Coming later" card.
   let browse = "";
   if (CONFIG.features.browse) {
-    const live = navSections().filter((s) => s.enabled);
-    const parked = CONFIG.features.showDisabled ? navSections().filter((s) => !s.enabled && s.teaser !== false) : [];
+    const live = navSections().filter((x) => x.enabled);
+    const parked = CONFIG.features.showDisabled ? navSections().filter((x) => !x.enabled && x.teaser !== false) : [];
     const [lead, ...rest] = live;
-    const tile = (s) => `<a class="bt" href="#/${esc(s.id)}" style="--sec:${ac(s)}">
-        <span class="bt-ic" aria-hidden="true">${ICONS[s.icon] ?? ICONS.grid}</span>
-        <span class="bt-tag">${esc(s.title)}</span>
-        <h3>${esc(s.blurb)}</h3>
-        <span class="bt-go">${esc(L.open)}</span>
-      </a>`;
-    const leadTile = lead ? `<div class="bt bt-lead" style="--sec:${ac(lead)}">
-        <a class="bt-lead-head" href="#/${esc(lead.id)}">
-          <span class="bt-tag">${esc(lead.title)}</span>
-          <h3>${esc(lead.blurb)}</h3>
-        </a>
-        <ul class="bt-list">${lead.cards.map((c) => {
-          const live = (c.links ?? []).find((l) => linkStatus(l) === "ok");
-          if (!live) return `<li><span class="bt-row is-off">${esc(c.title)}<span class="pill pill-soon">${esc(L.comingSoon)}</span></span></li>`;
-          const out = isInternal(live.url) ? "" : ' target="_blank" rel="noopener"';
-          return `<li><a class="bt-row" href="${esc(live.url)}"${out}>${esc(c.title)}${ICONS.chevron}</a></li>`;
+    const table = lead ? `<section class="dcard" aria-labelledby="dreq-h" style="--sec:${ac(lead)}">
+        <div class="dcard-h"><h2 id="dreq-h">${esc(L.startRequest)}</h2><a class="dlink" href="#/${esc(lead.id)}">${esc(L.seeAll)} ${ICONS.chevron}</a></div>
+        <ul class="dtable">${lead.cards.map((c) => {
+          const link = (c.links ?? []).find((l) => linkStatus(l) === "ok");
+          const out = link && !isInternal(link.url) ? ' target="_blank" rel="noopener"' : "";
+          return `<li${link ? "" : ' class="is-off"'}>
+            <span class="dic" aria-hidden="true">${ICONS[c.icon] ?? ICONS.requests}</span>
+            <span class="dname"><b>${esc(c.title)}</b><small>${esc(c.body)}</small></span>
+            ${c.owner && CONFIG.features.freshness ? `<span class="dpill">${esc(c.owner)}</span>` : ""}
+            ${link ? `<a class="btn btn-small" href="${esc(link.url)}"${out} aria-label="${esc(`${link.label}: ${c.title}`)}">${esc(L.startShort)}</a>`
+              : `<span class="pill pill-soon">${esc(L.comingSoon)}</span>`}
+          </li>`;
         }).join("")}</ul>
-      </div>` : "";
-    const later = parked.length ? `<div class="bt bt-later" aria-disabled="true" aria-label="${esc(L.laterTitle)}">
-        <span class="bt-ic" aria-hidden="true">${ICONS.book}</span>
-        <h3>${esc(parked.map((s) => s.title).join(", "))}</h3>
-        <span class="bt-go">${esc(L.comingSoon)}</span>
-      </div>` : "";
-    browse = `<section class="browse-block">
-        ${blockHead(L.browseHeading, L.browseSub)}
-        <div class="bento">${leadTile}${rest.map(tile).join("")}${later}</div>
-      </section>`;
+      </section>` : "";
+    const cards = rest.map((x) => `<a class="dcard dsec" href="#/${esc(x.id)}" style="--sec:${ac(x)}">
+        <span class="dic" aria-hidden="true">${ICONS[x.icon] ?? ICONS.grid}</span>
+        <b>${esc(x.title)}</b><small>${esc(x.blurb)}</small></a>`).join("");
+    const later = parked.length ? `<div class="dcard dsec dlater">
+        <span class="dic" aria-hidden="true">${ICONS.book}</span>
+        <b>${esc(L.laterTitle)}</b><small>${esc(parked.map((x) => x.title).join(", "))}</small></div>` : "";
+    browse = `${table}<div class="dgrid">${cards}${later}</div>`;
   }
 
   // Staff values as five color cards. Tapping one opens the full wording
@@ -389,17 +422,46 @@ function homeView() {
     panels = `<div class="cols">${tools}${attention}</div>`;
   }
 
-  // Order: greeting, daily links, sections, then the values.
-  return `${head}${quick}${browse}${values}${tiles}${panels}`;
+  // Order: greeting, this week, then the person's links. Requests, the
+  // sections and the staff values live in the sidebar (Ryan, Oct 29), so
+  // the request table and section cards above are built but not shown.
+  void browse;
+  return `${head}${top}${start}${valueOfWeekHTML()}${quick}${values}${tiles}${panels}`;
+}
+
+// One staff value a week, in order, changing every Monday on its own.
+function valueOfWeekHTML() {
+  const s = sections().find((x) => x.id === "values" && x.enabled);
+  if (!s?.cards.length) return "";
+  const monday = Date.UTC(2024, 0, 1);   // any Monday works as the starting point
+  const weeks = Math.floor((Date.now() - monday) / (7 * DAY));
+  const v = s.cards[weeks % s.cards.length];
+  return `<a class="dcard dvalue" href="#/${esc(s.id)}" style="--v:${esc(v.accent ?? "var(--teal)")}">
+      <span class="dic" aria-hidden="true">${VALUE_ICONS[v.icon] ?? ""}</span>
+      <span class="dvalue-t"><small>${esc(CONFIG.labels.valueOfWeek)}</small>
+        <b>${esc(v.title)}</b><span>${esc(v.short ?? "")}</span>
+        ${v.meta ? `<em>${esc(v.meta)}</em>` : ""}</span>
+      ${ICONS.chevron}</a>`;
 }
 
 function sectionView(section) {
   const empty = !section.enabled || section.cards.length === 0;
+  const L = CONFIG.labels;
+  // A section can open with a "Start here" row of its top links, with the
+  // rest of its cards under a heading.
+  const items = quickCatalog();
+  const top = (section.startHere ?? []).map((k) => items.find((x) => x.key === k)).filter(Boolean);
+  const body = top.length
+    ? `<section class="start-here" aria-labelledby="start-h"><h2 class="block-head" id="start-h">${esc(L.startHere)}</h2>
+        <div class="apps">${tilesHTML(top)}</div></section>
+       <h2 class="block-head">${esc(L.moreTools)}</h2>
+       ${cardsHTML(section, section.cards.filter((c) => !c.hideBelow))}`
+    : cardsHTML(section);
   return `<div class="page-head has-accent" style="--sec:${ac(section)}">
       <div><h1 class="page-title">${esc(section.title)}</h1>
       <p class="page-sub">${esc(section.blurb)}</p></div>
     </div>
-    ${empty ? `<p class="empty">${esc(CONFIG.labels.comingSoon)}</p>` : cardsHTML(section)}`;
+    ${empty ? `<p class="empty">${esc(L.comingSoon)}</p>` : body}`;
 }
 
 function brandView(section) {
@@ -921,29 +983,225 @@ function adminView() {
     + `<p class="empty-soft">${esc(CONFIG.labels.adminHowTo)}</p>`;
 }
 
+/* ================= quick links editor ================= */
+function wireQuickEdit() {
+  const L = CONFIG.labels;
+  const d = document.createElement("dialog");
+  d.className = "qe";
+  d.setAttribute("aria-labelledby", "qe-title");
+  document.body.appendChild(d);
+  let draft = [];
+
+  // Drag the handle to reorder (mouse or finger). With a keyboard, focus the
+  // handle and use the up and down arrow keys.
+  const row = (x, i) => `<li data-key="${esc(x.key)}">
+      <button type="button" class="qe-grip" data-i="${i}" aria-label="${esc(L.quickMove(x.label))}">${GRIP}</button>
+      <span class="qe-ic" aria-hidden="true">${ICONS[x.icon] ?? ICONS.doc}</span>
+      <span class="qe-name"><b>${esc(x.label)}</b><small>${esc(x.note)}</small></span>
+      <button type="button" data-qe="remove" data-i="${i}" aria-label="${esc(L.quickRemove(x.label))}">&times;</button>
+    </li>`;
+  function draw() {
+    const cat = quickCatalog();
+    const byKey = new Map(cat.map((x) => [x.key, x]));
+    const chosen = draft.map((k) => byKey.get(k)).filter(Boolean);
+    const full = chosen.length >= QUICK_MAX;
+    const groups = [...new Set(cat.map((x) => x.group))];
+    d.innerHTML = `<div class="qe-card">
+        <div class="qe-head"><h2 id="qe-title">${esc(L.quickEditTitle)}</h2>
+          <button type="button" class="qe-x" data-qe="cancel" aria-label="${esc(L.quickCancel)}">&times;</button></div>
+        <p class="qe-help">${esc(L.quickEditHelp(QUICK_MAX))}</p>
+        <h3>${esc(L.quickShowing)} <span>${chosen.length}/${QUICK_MAX}</span></h3>
+        ${chosen.length ? `<ol class="qe-chosen">${chosen.map((x, i) => row(x, i)).join("")}</ol>`
+          : `<p class="empty-soft">${esc(L.quickNone)}</p>`}
+        <h3>${esc(L.quickAdd)}</h3>
+        ${groups.map((g) => {
+          const left = cat.filter((x) => x.group === g && !draft.includes(x.key));
+          return left.length ? `<p class="qe-group">${esc(g)}</p><ul class="qe-pool">${left.map((x) => `<li>
+              <button type="button" data-qe="add" data-key="${esc(x.key)}" ${full ? "disabled" : ""}>
+                <span class="qe-ic" aria-hidden="true">${ICONS[x.icon] ?? ICONS.doc}</span>
+                <span class="qe-name"><b>${esc(x.label)}</b><small>${esc(x.note)}</small></span>
+                <span class="qe-plus" aria-hidden="true">+</span><span class="vh">${esc(L.quickAddOne)}</span>
+              </button></li>`).join("")}</ul>` : "";
+        }).join("")}
+        <div class="qe-foot">
+          <button type="button" class="qe-reset" data-qe="reset">${esc(L.quickReset)}</button>
+          <button type="button" class="btn btn-ghost" data-qe="cancel">${esc(L.quickCancel)}</button>
+          <button type="button" class="btn" data-qe="save">${esc(L.quickSave)}</button>
+        </div>
+      </div>`;
+  }
+  const refresh = () => { const a = $("apps"); if (a) a.innerHTML = appsHTML(); };
+
+  $("view").addEventListener("click", (e) => {
+    if (!e.target.closest("[data-quick-edit]")) return;
+    draft = myQuickItems().map((x) => x.key);
+    draw();
+    d.showModal();
+  });
+  d.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-qe]");
+    if (!b) { if (e.target === d) d.close(); return; }
+    const i = Number(b.dataset.i);
+    switch (b.dataset.qe) {
+      case "add": if (draft.length < QUICK_MAX) draft.push(b.dataset.key); break;
+      case "remove": draft.splice(i, 1); break;
+      case "cancel": d.close(); return;
+      case "reset":
+      case "save": {
+        b.disabled = true;
+        try {
+          if (b.dataset.qe === "reset") { await clearMine("quick_link_prefs"); myQuick = null; }
+          else { await saveMine("quick_link_prefs", { links: draft }); myQuick = [...draft]; }
+          refresh();
+          d.close();
+          toast(L.quickSaved);
+        } catch (err) {
+          console.warn("[hub] quick links", err);
+          toast(L.quickSaveFailed);
+          b.disabled = false;
+        }
+        return;
+      }
+      default: return;
+    }
+    // Keep focus nearby after a redraw so keyboard users are not lost.
+    draw();
+    (b.dataset.qe === "remove" && d.querySelector(`[data-qe="remove"][data-i="${Math.min(i, draft.length - 1)}"]`)
+      || d.querySelector(".qe-chosen li:last-child [data-qe=remove]") || d.querySelector(".qe-x"))?.focus();
+  });
+
+  // Keyboard reordering on the grip.
+  d.addEventListener("keydown", (e) => {
+    const g = e.target.closest(".qe-grip");
+    if (!g || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    e.preventDefault();
+    const i = Number(g.dataset.i), j = e.key === "ArrowUp" ? i - 1 : i + 1;
+    if (j < 0 || j >= draft.length) return;
+    [draft[i], draft[j]] = [draft[j], draft[i]];
+    draw();
+    d.querySelector(`.qe-grip[data-i="${j}"]`)?.focus();
+  });
+
+  // Drag and drop with pointer events, so it works with a mouse and on phones.
+  let drag = null;
+  d.addEventListener("pointerdown", (e) => {
+    const g = e.target.closest(".qe-grip");
+    if (!g) return;
+    e.preventDefault();
+    const li = g.closest("li");
+    const box = li.getBoundingClientRect();
+    drag = { li, list: li.parentElement, startY: e.clientY, offset: e.clientY - box.top };
+    li.classList.add("is-dragging");
+    g.setPointerCapture(e.pointerId);
+  });
+  d.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const { li, list } = drag;
+    li.style.transform = `translateY(${e.clientY - drag.startY}px)`;
+    // Step the row past each neighbour whose middle the pointer has crossed.
+    for (let moved = true; moved;) {
+      moved = false;
+      const prev = li.previousElementSibling, next = li.nextElementSibling;
+      const mid = (el) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
+      const top = li.offsetTop;
+      if (prev && e.clientY < mid(prev)) { list.insertBefore(li, prev); moved = true; }
+      else if (next && e.clientY > mid(next)) { list.insertBefore(li, next.nextSibling); moved = true; }
+      if (moved) {
+        drag.startY += li.offsetTop - top;
+        li.style.transform = `translateY(${e.clientY - drag.startY}px)`;
+      }
+    }
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    draft = [...drag.list.children].map((x) => x.dataset.key);
+    drag = null;
+    draw();
+  };
+  d.addEventListener("pointerup", endDrag);
+  d.addEventListener("pointercancel", endDrag);
+}
+
 /* ================= announcement ================= */
 const KEY = "cf-staffhub-dismissed";
 const ICON_ANN = svg('<path d="M4 10v4a1 1 0 0 0 1 1h2l6 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16.5 9a4 4 0 0 1 0 6"/><path d="M19 6.5a7.5 7.5 0 0 1 0 11"/>');
 const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return String(h); };
 
-function announcementHTML() {
+// The current announcement, or null when there is none, it has expired, or
+// this person dismissed it.
+function activeAnnouncement() {
   const a = CONTENT.announcement;
-  if (!CONFIG.features.announcement || !a?.text) return "";
+  if (!CONFIG.features.announcement || !a?.text) return null;
   if (a.until) {
     const until = new Date(a.until + "T23:59:59");
-    if (!Number.isNaN(until.getTime()) && Date.now() > until.getTime()) return "";
+    if (!Number.isNaN(until.getTime()) && Date.now() > until.getTime()) return null;
   }
   const id = hash(a.text + (a.link ?? ""));
-  try { if (localStorage.getItem(KEY) === id) return ""; } catch { /* show it */ }
+  try { if (localStorage.getItem(KEY) === id) return null; } catch { /* show it */ }
   const level = a.level === "urgent" ? "urgent" : "info";
   const tag = a.label ?? (level === "urgent" ? CONFIG.labels.annUrgent : CONFIG.labels.annInfo);
-  const cta = a.link ? `<a class="ann-cta" href="${esc(a.link)}">${esc(a.linkLabel ?? "Details")}</a>` : "";
-  return `<div class="ann ann-${level}" id="ann" data-id="${esc(id)}" role="status">
+  return { a, id, level, tag };
+}
+
+// Info notices live in an alert above the greeting (noticeCardHTML). The banner across the
+// top is for urgent ones, or for any notice when the hero is off.
+function announcementHTML() {
+  const n = activeAnnouncement();
+  if (!n || (n.level === "info" && CONFIG.features.greeting)) return "";
+  const cta = n.a.link ? `<a class="ann-cta" href="${esc(n.a.link)}">${esc(n.a.linkLabel ?? "Details")}</a>` : "";
+  return `<div class="ann ann-${n.level}" id="ann" data-id="${esc(n.id)}" role="status">
       <span class="ann-ic" aria-hidden="true">${ICON_ANN}</span>
-      <div class="ann-body"><span class="ann-tag">${esc(tag)}</span><p>${esc(a.text)}</p></div>
+      <div class="ann-body"><span class="ann-tag">${esc(n.tag)}</span><p>${esc(n.a.text)}</p></div>
       ${cta}
       <button type="button" id="ann-x" aria-label="Dismiss">&times;</button>
     </div>`;
+}
+
+// The Heads up alert on Home: an orange pill above the greeting with the
+// short title and due date. Tap it for the full notice, the link and Hide.
+// Hide dismisses it for this person.
+function noticeCardHTML() {
+  const n = activeAnnouncement();
+  if (!n || n.level !== "info") return "";
+  const L = CONFIG.labels;
+  const cta = n.a.link ? `<a class="btn btn-small" href="${esc(n.a.link)}"${isInternal(n.a.link) ? "" : ' target="_blank" rel="noopener"'}>${esc(n.a.linkLabel ?? L.annMore)}</a>` : "";
+  const short = n.a.title ? `${n.a.title}${n.a.when ? ` · ${n.a.when}` : ""}` : n.a.text;
+  return `<details class="dalert" data-ann-id="${esc(n.id)}">
+      <summary><span class="dalert-ic" aria-hidden="true">${ICON_ANN}</span><span class="dalert-t">${esc(short)}</span><span class="dalert-more">${esc(L.annMore)}</span></summary>
+      <div class="dalert-panel">
+        <p>${esc(n.a.text)}</p>
+        <div class="dnote-act">${cta}<button type="button" class="btn btn-ghost btn-small hn-x">${esc(L.annHide)}</button></div>
+      </div>
+    </details>`;
+}
+
+// This week, Monday to Sunday: today ringed, and the notice's date, paydays
+// and office holidays marked. Every date comes from content.js.
+function weekCardHTML() {
+  const L = CONFIG.labels;
+  const iso = (d) => d.toLocaleDateString("en-CA");
+  const ev = new Map();
+  const add = (date, label, kind) => { if (!ev.has(date)) ev.set(date, { label, kind }); };
+  const n = activeAnnouncement();
+  if (n?.a.date) add(n.a.date, n.a.dayLabel ?? n.a.title ?? n.tag, "notice");
+  for (const [d, name] of CONTENT.holidays ?? []) add(d, `${name} (${L.weekClosed})`, "holiday");
+  for (const [d] of CONTENT.payDates ?? []) add(d, L.weekPayday, "payday");
+  const now = new Date();
+  const mon = new Date(now); mon.setHours(12, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+  const today = iso(now);
+  const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
+  return `<section class="dcard dweek" aria-labelledby="dweek-h">
+      <div class="dcard-h"><h2 id="dweek-h">${esc(L.weekHeading)}</h2>
+        <span class="dlegend"><i class="is-today"></i>${esc(L.weekToday)}<i class="is-ev"></i>${esc(L.weekEvent)}</span></div>
+      <ol>${days.map((d) => {
+        const key = iso(d), e = ev.get(key), on = key === today;
+        const label = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+        return `<li class="${on ? "is-today" : ""}${e ? ` has-ev ev-${e.kind}` : ""}">
+          <small aria-hidden="true">${esc(d.toLocaleDateString("en-US", { weekday: "short" }))}</small>
+          <span aria-label="${esc(label + (on ? `, ${L.weekToday}` : ""))}">${d.getDate()}</span>
+          ${e ? `<em>${esc(e.label)}</em>` : ""}</li>`;
+      }).join("")}</ol>
+    </section>`;
 }
 
 /* ================= shell ================= */
@@ -956,6 +1214,13 @@ function renderNav(active) {
     items.push(`<a href="#/${esc(s.id)}"${cls} style="--sec:${ac(s)}"${active === s.id ? ' aria-current="page"' : ""}>${esc(s.title)}</a>`);
   }
   $("nav").innerHTML = items.join("");
+  // The desktop sidebar: the same links with icons.
+  const side = $("side-nav");
+  if (side) {
+    const link = (id, title, icon, sec) => `<a href="#/${esc(id)}"${sec ? ` style="--sec:${sec}"` : ""}${active === id ? ' class="is-active" aria-current="page"' : ""}>${ICONS[icon] ?? ICONS.doc}<span>${esc(title)}</span></a>`;
+    side.innerHTML = link("home", CONFIG.labels.home ?? "Home", "home")
+      + navSections().filter((x) => x.enabled).map((x) => link(x.id, x.title, x.icon, ac(x))).join("");
+  }
   renderTabs(active);
 }
 
@@ -977,19 +1242,32 @@ function renderTabs(active) {
   }).join("");
 }
 
+/* ================= menu (phones and tablets) ================= */
+// Below desktop width the sidebar slides in from the left as a menu.
+function openSideMenu() {
+  document.body.classList.add("menu-open");
+  $("side-backdrop").hidden = false;
+  $("menu-open").setAttribute("aria-expanded", "true");
+  $("side").querySelector(".side-nav a")?.focus();
+}
+function closeSideMenu(focusButton = false) {
+  if (!document.body.classList.contains("menu-open")) return;
+  document.body.classList.remove("menu-open");
+  $("side-backdrop").hidden = true;
+  $("menu-open").setAttribute("aria-expanded", "false");
+  if (focusButton) $("menu-open").focus();
+}
+$("menu-open").addEventListener("click", openSideMenu);
+$("menu-close").addEventListener("click", () => closeSideMenu(true));
+$("side-backdrop").addEventListener("click", () => closeSideMenu(true));
+$("side").addEventListener("click", (e) => { if (e.target.closest("a")) closeSideMenu(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSideMenu(true); });
+
 /* ================= search panel ================= */
 // Search drops out of the nav bar like Spotlight. Opening it focuses the box;
 // closing it clears the box and puts the page back.
 function openSearch() {
   if (!CONFIG.features.search) return;
-  // On Home the hero has a real search box, so use it instead of dropping
-  // the nav panel. Results show right under the hero.
-  const hero = $("hero-q");
-  if (hero && !document.body.classList.contains("search-open")) {
-    hero.focus();
-    hero.scrollIntoView({ block: "center", behavior: "smooth" });
-    return;
-  }
   document.body.classList.add("search-open");
   $("search-open").setAttribute("aria-expanded", "true");
   renderTabs(null);
@@ -1111,13 +1389,23 @@ function boot() {
     try { localStorage.setItem(KEY, el.dataset.id); } catch { /* fine */ }
     el.remove();
   });
+  // The hero notice is redrawn with Home, so listen on the page.
+  document.addEventListener("click", (e) => {
+    const x = e.target.closest(".hn-x");
+    if (!x) return;
+    const note = x.closest("[data-ann-id]");
+    try { localStorage.setItem(KEY, note.dataset.annId); } catch { /* fine */ }
+    note.remove();
+  });
 
   const c = CONTENT.contact;
   $("contact").innerHTML = `${esc(c.prompt)} <a href="mailto:${esc(c.email)}">${esc(c.name)}</a>`;
+  if ($("side-help")) $("side-help").innerHTML = `<b>${esc(c.prompt)}</b><a href="mailto:${esc(c.email)}">${esc(CONFIG.labels.tellName(c.name))}</a>`;
   $("health").textContent = healthHTML();
   if (!CONFIG.features.search) $("search-open").hidden = true;
 
   wireValues();
+  if (CONFIG.features.quickActions) wireQuickEdit();
   route();
 }
 
@@ -1183,11 +1471,13 @@ async function start() {
     return showGate(CONFIG.labels.gateNotStaff(session.user.email ?? "That"),
       CONFIG.labels.gateNotStaffButton, () => signOut());
   }
-  const [cards, staff, handbook] = await Promise.all([
+  const [cards, staff, handbook, quickPrefs] = await Promise.all([
     selectAll("hub_cards", "sort_order"),
     selectAll("staff_directory", "last_name"),
     selectAll("handbook_sections", "sort_order"),
+    CONFIG.features.quickActions ? selectAll("quick_link_prefs") : [],
   ]);
+  if (quickPrefs[0]) myQuick = quickPrefs[0].links ?? [];
   mergeProtectedCards(cards);
   loadStaff(staff);
   loadHandbook(handbook);
@@ -1223,21 +1513,6 @@ $("search").addEventListener("input", () => { $("clear").hidden = !$("search").v
 $("clear").addEventListener("click", () => { $("search").value = ""; $("clear").hidden = true; route(); $("search").focus(); });
 $("search-open").addEventListener("click", () =>
   document.body.classList.contains("search-open") ? closeSearch() : openSearch());
-// The hero search box on Home. Results render under the hero and the rest
-// of Home steps aside until the box is cleared.
-function heroSearch(value) {
-  const q = value.trim().toLowerCase();
-  $("view").classList.toggle("hero-searching", !!q);
-  $("hero-results").innerHTML = q ? searchView(q) : "";
-}
-document.addEventListener("input", (e) => {
-  if (e.target.id === "hero-q") heroSearch(e.target.value);
-});
-document.addEventListener("keydown", (e) => {
-  if (e.target.id === "hero-q" && e.key === "Escape") {
-    e.target.value = ""; heroSearch(""); e.target.blur();
-  }
-});
 // Anything marked data-open-search (the Search tab) opens it.
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-open-search]")) { e.preventDefault(); openSearch(); }

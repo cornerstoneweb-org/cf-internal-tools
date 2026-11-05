@@ -13,7 +13,10 @@ export const CONFIG = {
                           // staff the wrong story. It lives on /admin now.
     announcement: true,   // the banner
     healthLine: false,    // "n items need checking" in the footer. Same reason.
-    quickActions: true,   // the app-icon row on Home
+    quickActions: false,  // "Your tools" on Home and its Edit screen. Off
+                          // Nov 5 (Ryan): the top apps moved to "Start here"
+                          // on Apps & Tools. quick_link_prefs stays in the
+                          // database, unused, in case this comes back.
     browse: true,         // the tile grid of sections on Home. Back on with
                           // the top nav (2026-09-23): the nav is a thin row of
                           // words, the tiles say what each section is for.
@@ -61,6 +64,18 @@ export const CONFIG = {
     // Announcement banner tag, by level (content.js announcement.label overrides)
     annInfo: "Heads up",
     annUrgent: "Important",
+    annHide: "Hide this",
+    annMore: "Details",
+    annWhen: "When",
+    annWhere: "Where",
+    weekHeading: "This week",
+    weekToday: "Today",
+    weekEvent: "Event",
+    weekPayday: "Payday",
+    weekClosed: "offices closed",
+    startRequest: "Start a request",
+    startShort: "Start",
+    tellName: (n) => `Tell ${n}`,
 
     // Corner badge on the preview site (PREVIEW_HOSTS in site.config.js)
     previewBadge: "Preview",
@@ -115,6 +130,10 @@ export const CONFIG = {
     welcomeLede: "We're so glad you're here.",
     welcomeBody: [],
     heroSub: "Welcome to the Staff Hub. We're so glad you're here.",
+    // The "Connected" hero (2026-10-25): the greeting, then this line in a
+    // CF color picked at random on each visit (green, blue or orange).
+    heroWelcome: "Welcome to the Staff Hub",
+    heroLine: "Connecting every one of us with the forms, tools and people we need.",
     // Used when the greeting itself does not already say their name.
     heroSubNamed: (name) => `Welcome to the Staff Hub, ${name}. We're so glad you're here.`,
 
@@ -128,8 +147,29 @@ export const CONFIG = {
       "Hey there, {name}",
       "Good to see you, {name}",
     ],
-    quickHeading: "Quick links",
-    quickSub: "The places you go every day.",
+    startHere: "Start here",
+    valueOfWeek: "Staff value of the week",
+    moreTools: "Everything else",
+    quickHeading: "Your tools",
+    quickSub: "The apps and pages you use most. Outside apps open in a new tab.",
+    opensNewTab: "opens in a new tab",
+    quickEdit: "Edit",
+    quickEditTitle: "Your tools",
+    quickEditHelp: (n) => `Pick up to ${n}. Drag the dots to change the order. Your picks follow you to any device.`,
+    quickShowing: "On your Home page",
+    quickAdd: "Add more",
+    quickAddOne: "Add",
+    quickNone: "Nothing picked yet. Add some from the list below.",
+    quickEmpty: "Nothing here yet. Tap Edit to pick some.",
+    quickSave: "Save",
+    quickCancel: "Cancel",
+    quickReset: "Go back to the usual links",
+    quickSaved: "Your tools are saved.",
+    quickSaveFailed: "Couldn't save your tools. Check your connection and try again.",
+    quickPageNote: "Staff Hub page",
+    quickMove: (t) => `Move ${t}. Drag, or use the up and down arrow keys.`,
+    quickRemove: (t) => `Remove ${t}`,
+    quickGroups: { everyday: "Apps", software: "Software", requests: "Requests", pages: "Staff Hub pages" },
     heroSearch: "Search the hub, or ask where something lives",
     browseSub: "Everything staff need, in one place.",
     laterTitle: "Coming later",
