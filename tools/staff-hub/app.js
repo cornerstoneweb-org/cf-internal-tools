@@ -2,10 +2,11 @@ import { CONFIG } from "./config.js";
 import { CONTENT } from "./content.js";
 import { CAMPUSES, TOOLS, PREVIEW_HOSTS } from "../../config/site.config.js";
 import { BRAND_LIBRARY } from "./brand-library.js";
-import { getSession, isStaff, displayName, userMeta, signIn, signOut, selectAll, saveMine, clearMine } from "../../shared/js/auth.js";
+import { getSession, isStaff, displayName, userMeta, signIn, signOut, myRoles, selectAll, saveMine, clearMine } from "../../shared/js/auth.js";
 import { watchForNewVersion } from "../../shared/js/version-check.js";
 import { toast } from "../../shared/js/ui.js";
 import { mountFacilities } from "../facilities/facilities.js";
+import { mountBudget } from "./budget.js";
 
 const LIB = "../../shared/assets/brand/library/";
 
@@ -51,6 +52,7 @@ const ICONS = {
   out:      svg('<path d="M8 16 16 8M9.5 8H16v6.5"/>'),
   brush:    svg('<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="m14 6 3 3"/>'),
   globe:    svg('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.5 3.6 5.3 3.6 8.5s-1.2 6-3.6 8.5c-2.4-2.5-3.6-5.3-3.6-8.5s1.2-6 3.6-8.5z"/>'),
+  budget:   svg('<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M15.5 14.5h2.5"/>'),
   laptop:   svg('<rect x="4.5" y="5" width="15" height="10" rx="1.5"/><path d="M2.5 18.5h19"/>'),
 };
 const isInternal = (url) => String(url ?? "").startsWith("#");
@@ -146,6 +148,7 @@ const FACILITIES_ON = PREVIEW || TOOLS.find((t) => t.id === "facilities")?.enabl
 const hiddenUrl = (url) => !FACILITIES_ON && /^#\/?facilities/.test(url ?? "");
 const SECTIONS = CONTENT.sections.map((s) => ({
   ...s,
+  enabled: s.enabled && (!s.previewOnly || PREVIEW),
   cards: s.cards.map((c) => c.links?.some((l) => hiddenUrl(l.url))
     ? { ...c, links: c.links.map((l) => hiddenUrl(l.url) ? { label: l.label, url: null, status: "pending" } : l) }
     : c),
@@ -319,13 +322,12 @@ function homeView() {
          <p class="welcome-lede">${esc(L.welcomeLede)}</p>
          ${(L.welcomeBody ?? []).map((para) => `<p>${esc(para)}</p>`).join("")}
        </div>`;
-  const top = `<div class="drow is-single">${weekCardHTML()}</div>`;
   // The "Start here" row from Apps & Tools, then one staff value a week.
   const startKeys = sections().find((x) => x.startHere)?.startHere ?? [];
   const catalog = quickCatalog();
   const startItems = startKeys.map((k) => catalog.find((x) => x.key === k)).filter(Boolean);
   const start = startItems.length
-    ? `<section class="dcard" aria-labelledby="dstart-h"><div class="dcard-h"><h2 id="dstart-h">${esc(L.startHere)}</h2>
+    ? `<section class="dcard" aria-labelledby="dstart-h"><div class="dcard-h"><h2 id="dstart-h">${esc(L.homeStart ?? L.startHere)}</h2>
          <a class="dlink" href="#/software">${esc(L.seeAll)} ${ICONS.chevron}</a></div>
          <div class="apps">${tilesHTML(startItems)}</div></section>` : "";
 
@@ -422,11 +424,15 @@ function homeView() {
     panels = `<div class="cols">${tools}${attention}</div>`;
   }
 
-  // Order: greeting, this week, then the person's links. Requests, the
+  // Order (Nov 10, Ryan): greeting, staff value of the week, the quick
+  // "jump in" tools, then a smaller This week strip, then the person's links.
+  // Earlier note: Requests, the
   // sections and the staff values live in the sidebar (Ryan, Oct 29), so
   // the request table and section cards above are built but not shown.
   void browse;
-  return `${head}${top}${start}${valueOfWeekHTML()}${quick}${values}${tiles}${panels}`;
+  // On phones the calendar drops to the bottom instead (Ryan, Nov 10): the
+  // same card is built twice and CSS shows one per screen size.
+  return `${head}<div class="drow dtop">${valueOfWeekHTML()}${weekCardHTML("top")}</div>${start}${quick}${values}${tiles}${panels}${weekCardHTML("end")}`;
 }
 
 // One staff value a week, in order, changing every Monday on its own.
@@ -523,7 +529,9 @@ function brandView(section) {
 // People come from the locked staff_directory table after sign-in.
 let STAFF = [];
 const campusOf = (code) => CONFIG.campuses?.[code] ?? { label: code, color: "var(--slate)" };
-const personName = (p) => `${p.first_name} ${p.last_name}`;
+// The name someone goes by comes first; first_name stays as HR has it.
+const givenName = (p) => p.preferred_name || p.first_name;
+const personName = (p) => `${givenName(p)} ${p.last_name}`;
 const teams = (kind, email) => `https://teams.microsoft.com/l/${kind}/0/0?users=${encodeURIComponent(email)}`;
 
 function staffLinks(p) {
@@ -556,9 +564,9 @@ function directoryView(section) {
     .sort((a, b) => campusOf(a).label.localeCompare(campusOf(b).label));
   const people = STAFF.map((p) => {
     const c = campusOf(p.campus_code);
-    const q = `${personName(p)} ${p.title ?? ""} ${c.label}`.toLowerCase();
+    const q = `${personName(p)} ${p.first_name} ${p.title ?? ""} ${c.label}`.toLowerCase();
     return `<li class="person" data-campus="${esc(p.campus_code)}" data-q="${esc(q)}" style="--camp:${esc(c.color)}">
-      <span class="person-av" aria-hidden="true">${esc((p.first_name[0] + p.last_name[0]).toUpperCase())}</span>
+      <span class="person-av" aria-hidden="true">${esc((givenName(p)[0] + p.last_name[0]).toUpperCase())}</span>
       <span class="person-main">
         <b>${esc(personName(p))}</b>
         <span class="person-title">${esc(p.title ?? "")}</span>
@@ -1048,6 +1056,7 @@ function wireQuickEdit() {
       case "cancel": d.close(); return;
       case "reset":
       case "save": {
+        if (viewingAs) { toast(L.viewAsNoSave); return; }
         b.disabled = true;
         try {
           if (b.dataset.qe === "reset") { await clearMine("quick_link_prefs"); myQuick = null; }
@@ -1177,7 +1186,7 @@ function noticeCardHTML() {
 
 // This week, Monday to Sunday: today ringed, and the notice's date, paydays
 // and office holidays marked. Every date comes from content.js.
-function weekCardHTML() {
+function weekCardHTML(where = "top") {
   const L = CONFIG.labels;
   const iso = (d) => d.toLocaleDateString("en-CA");
   const ev = new Map();
@@ -1190,13 +1199,13 @@ function weekCardHTML() {
   const mon = new Date(now); mon.setHours(12, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
   const today = iso(now);
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
-  return `<section class="dcard dweek" aria-labelledby="dweek-h">
-      <div class="dcard-h"><h2 id="dweek-h">${esc(L.weekHeading)}</h2>
+  return `<section class="dcard dweek dweek-quiet dweek-${where}" aria-labelledby="dweek-h-${where}">
+      <div class="dcard-h"><h2 id="dweek-h-${where}">${esc(L.weekHeading)}</h2>
         <span class="dlegend"><i class="is-today"></i>${esc(L.weekToday)}<i class="is-ev"></i>${esc(L.weekEvent)}</span></div>
       <ol>${days.map((d) => {
         const key = iso(d), e = ev.get(key), on = key === today;
         const label = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-        return `<li class="${on ? "is-today" : ""}${e ? ` has-ev ev-${e.kind}` : ""}">
+        return `<li class="${on ? "is-today" : ""}${e ? ` has-ev ev-${e.kind}` : ""}"${e ? ` title="${esc(e.label)}"` : ""}>
           <small aria-hidden="true">${esc(d.toLocaleDateString("en-US", { weekday: "short" }))}</small>
           <span aria-label="${esc(label + (on ? `, ${L.weekToday}` : ""))}">${d.getDate()}</span>
           ${e ? `<em>${esc(e.label)}</em>` : ""}</li>`;
@@ -1312,7 +1321,7 @@ function route() {
   if (id === "facilities" && FACILITIES_ON) {
     renderNav("requests");
     $("search").placeholder = CONFIG.labels.searchPlaceholder;
-    mountFacilities($("view"), { userName: firstName, toast });
+    mountFacilities($("view"), { userName: firstName, toast, followHub: true });
     return;
   }
 
@@ -1327,12 +1336,18 @@ function route() {
       : section.layout === "handbook" ? handbookView(section)
       : section.layout === "paydates" ? payDatesView(section)
       : section.layout === "holidays" ? holidaysView(section)
+      : section.layout === "budget" ? ""
       : sectionView(section))
     : homeView();
   $("search").placeholder = section
     ? CONFIG.labels.sectionSearchPlaceholder(section.title)
     : CONFIG.labels.searchPlaceholder;
   document.title = `${section ? section.title + " · " : ""}Staff Hub | Cornerstone Fellowship`;
+  if (section?.layout === "budget") {
+    $("search").placeholder = CONFIG.labels.searchPlaceholder;
+    mountBudget($("view"), { sub, signedInEmail, viewingAsEmail: viewingAs?.email,
+      person: viewingAs ?? STAFF.find((p) => p.email?.toLowerCase() === signedInEmail.toLowerCase()) });
+  }
   if (section?.layout === "brand") wireSwatches();
   if (section?.layout === "directory") wireDirectory();
   if (section?.layout === "handbook") wireHandbook(sub);
@@ -1435,16 +1450,106 @@ function firstNameOf(session) {
   return full.includes("@") ? "" : full.trim().split(/\s+/)[0] ?? "";
 }
 
+let signedInEmail = "";
 function renderMe(session) {
-  firstName = firstNameOf(session);
-  const name = displayName(session);
+  signedInEmail = session.user.email ?? "";
+  // Microsoft's name loses to the roster only when someone has a preferred name.
+  const email = session.user.email?.toLowerCase();
+  const me = viewingAs ?? STAFF.find((p) => p.preferred_name && p.email.toLowerCase() === email);
+  firstName = me ? givenName(me) : firstNameOf(session);
+  const name = me ? personName(me) : displayName(session);
   $("avatar").textContent = initials(name);
   $("me-name").textContent = name;
-  $("me-role").textContent = session.user.email ?? "";
+  $("me-role").textContent = viewingAs ? viewingAs.email : session.user.email ?? "";
+  // The footer always tells the truth about who is really signed in.
   $("me-line").innerHTML = `${esc(CONFIG.labels.signedInAs)} ${esc(session.user.email ?? name)} ·
     <button type="button" class="linkish" id="sign-out">${esc(CONFIG.labels.signOut)}</button>`;
-  $("sign-out").addEventListener("click", () => signOut());
-  $("menu-sign-out").onclick = () => signOut();
+  const out = () => { forgetViewAs(); signOut(); };
+  $("sign-out").addEventListener("click", out);
+  $("menu-sign-out").onclick = out;
+}
+
+/* ================= view as (admins only) =================
+   Lets an admin see the hub the way a staff member would. It changes what
+   this tab SHOWS and nothing else: the session, the database token and RLS
+   stay the admin's own, so it can never reach anything the admin couldn't
+   already reach, and it never saves anything as the other person.
+
+   The menu item appears only when the database says the signed-in person has
+   the admin role (public.my_roles). That is a real check, but it only guards
+   the menu. Anything per-person added later must be decided by RLS or a
+   server-side function, never by this mode. */
+const VIEW_AS_KEY = "cf-hub-view-as";   // sessionStorage: ends with the tab
+let viewingAs = null;                    // a staff_directory row, or null
+
+function rememberedViewAs() {
+  try { return sessionStorage.getItem(VIEW_AS_KEY); } catch { return null; }
+}
+function forgetViewAs() {
+  try { sessionStorage.removeItem(VIEW_AS_KEY); } catch { /* fine */ }
+}
+function switchViewAs(email) {
+  try {
+    if (email) sessionStorage.setItem(VIEW_AS_KEY, email);
+    else sessionStorage.removeItem(VIEW_AS_KEY);
+  } catch { toast(CONFIG.labels.viewAsNoSave); return; }
+  location.reload();
+}
+
+function renderViewAs(session, isAdmin) {
+  const L = CONFIG.labels;
+  $("menu-view-as").hidden = !isAdmin;
+  $("menu-view-as").onclick = () => { closeMenu(); openViewAsPicker(session); };
+  $("menu-view-exit").hidden = !viewingAs;
+  $("menu-view-exit").onclick = () => switchViewAs(null);
+  document.body.classList.toggle("is-viewing-as", !!viewingAs);
+  const bar = $("va-bar");
+  bar.hidden = !viewingAs;
+  if (!viewingAs) return;
+  bar.innerHTML = `<span class="va-bar-text"><b>${esc(L.viewAsBar(personName(viewingAs)))}</b>
+      <span>${esc(L.viewAsBarNote(displayName(session)))}</span></span>
+    <button type="button" class="va-bar-exit" id="va-exit">${esc(L.viewAsExit)}</button>`;
+  $("va-exit").onclick = () => switchViewAs(null);
+}
+
+function openViewAsPicker(session) {
+  const L = CONFIG.labels;
+  const me = session.user.email?.toLowerCase();
+  const people = STAFF.filter((p) => p.email.toLowerCase() !== me);
+  document.getElementById("va-picker")?.remove();
+  const d = document.createElement("dialog");
+  d.id = "va-picker";
+  d.className = "qe va";
+  d.setAttribute("aria-labelledby", "va-title");
+  d.innerHTML = `<div class="qe-card">
+    <h2 class="va-title" id="va-title">${esc(L.viewAsTitle)}</h2>
+    <p class="va-help">${esc(L.viewAsHelp)}</p>
+    <input class="va-search" id="va-search" type="search" autocomplete="off" spellcheck="false"
+      placeholder="${esc(L.viewAsSearch)}" aria-label="${esc(L.viewAsSearch)}">
+    <div class="va-list" id="va-list"></div>
+    <div class="va-foot"><button type="button" class="linkish" id="va-cancel">${esc(L.viewAsCancel)}</button></div>
+  </div>`;
+  document.body.append(d);
+  const list = d.querySelector("#va-list");
+  const draw = (q = "") => {
+    const t = q.trim().toLowerCase();
+    const hits = people.filter((p) => `${personName(p)} ${p.first_name} ${p.title ?? ""}`.toLowerCase().includes(t));
+    list.innerHTML = hits.length
+      ? hits.map((p) => `<button type="button" class="va-person" data-email="${esc(p.email)}">
+          <b>${esc(personName(p))}</b>
+          <span>${esc([p.title, campusOf(p.campus_code).label].filter(Boolean).join(" · "))}</span>
+        </button>`).join("")
+      : `<p class="va-none">${esc(L.viewAsNone)}</p>`;
+  };
+  draw();
+  d.querySelector("#va-search").addEventListener("input", (e) => draw(e.target.value));
+  d.querySelector("#va-cancel").addEventListener("click", () => d.close());
+  list.addEventListener("click", (e) => {
+    const b = e.target.closest(".va-person");
+    if (b) switchViewAs(b.dataset.email);
+  });
+  d.addEventListener("close", () => d.remove());
+  d.showModal();
 }
 
 function showGate(message, buttonLabel, action) {
@@ -1471,15 +1576,21 @@ async function start() {
     return showGate(CONFIG.labels.gateNotStaff(session.user.email ?? "That"),
       CONFIG.labels.gateNotStaffButton, () => signOut());
   }
-  const [cards, staff, handbook, quickPrefs] = await Promise.all([
+  const [cards, staff, handbook, quickPrefs, roles] = await Promise.all([
     selectAll("hub_cards", "sort_order"),
     selectAll("staff_directory", "last_name"),
     selectAll("handbook_sections", "sort_order"),
     CONFIG.features.quickActions ? selectAll("quick_link_prefs") : [],
+    myRoles(),
   ]);
   if (quickPrefs[0]) myQuick = quickPrefs[0].links ?? [];
   mergeProtectedCards(cards);
   loadStaff(staff);
+  // Only an admin can be viewing as someone. Anyone else loses the leftover.
+  const isAdmin = roles.includes("admin");
+  const wanted = rememberedViewAs()?.toLowerCase();
+  viewingAs = (isAdmin && wanted && STAFF.find((p) => p.email.toLowerCase() === wanted)) || null;
+  if (!viewingAs) forgetViewAs();
   loadHandbook(handbook);
   // Labor law notices become cards too, so the main search finds "sick leave".
   const labor = sections().find((x) => x.id === "laborlaw");
@@ -1490,12 +1601,15 @@ async function start() {
   $("signin").hidden = true;
   document.body.classList.remove("is-locked");
   renderMe(session);
+  renderViewAs(session, isAdmin);
   boot();
 }
 
 watchForNewVersion();
 if (PREVIEW) document.body.insertAdjacentHTML("beforeend",
-  `<div class="preview-badge" title="${esc(CONFIG.labels.previewBadgeNote)}">${esc(CONFIG.labels.previewBadge)}</div>`);
+  PREVIEW_HOSTS.includes(location.hostname)
+    ? `<div class="preview-badge" title="${esc(CONFIG.labels.previewBadgeNote)}">${esc(CONFIG.labels.previewBadge)}</div>`
+    : `<div class="preview-badge is-local">${esc(CONFIG.labels.localBadge)}</div>`);
 start();
 
 // Going somewhere clears the filter and closes search. Without this, an

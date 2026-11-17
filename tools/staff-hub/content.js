@@ -184,7 +184,7 @@ export const CONTENT = {
         },
         {
           title: "Facilities", icon: "wrench",
-          body: "Repairs, building issues, keys and access.",
+          body: "Repairs and building issues.",
           owner: "Joe",
           reviewed: null,
           // Points at the Facilities mockup (demo data) while Ryan and Joe review it.
@@ -201,7 +201,7 @@ export const CONTENT = {
       // "Start here" row at the top of the page: keys from quickActions, in
       // order. A card with hideBelow: true stays out of the list under it
       // (its only link is already in the row) but is still searchable.
-      startHere: ["email", "teams", "central", "onepoint"],
+      startHere: ["email", "teams", "central", "onepoint", "facilities"],   // facilities only shows where the tool is on (preview for now)
       enabled: true,
       layout: "full",
       reviewEvery: 12,
@@ -507,7 +507,8 @@ export const CONTENT = {
 
     // Parked sections are named in Home's "Coming later" tile unless
     // teaser: false.
-    { id: "budgets", icon: "doc", accent: "var(--sec-default)", title: "Budget Report Access", blurb: "Coming in a future release.", enabled: false, layout: "compact", cards: [] },
+    // The Budget page (budget.js). Shipped to live Nov 17, 2026 (Ryan).
+    { id: "budget", icon: "budget", accent: "var(--sec-guides)", title: "Budget", blurb: "Your ministry budget.", enabled: true, teaser: false, layout: "budget", cards: [] },
     {
       id: "guides", icon: "book",
       accent: "var(--sec-guides)",
